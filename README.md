@@ -47,8 +47,8 @@ Uma decisão arquitetural central orienta o sistema: **regras de qualidade da es
 
 ## Links do projeto
 
-- Quadro de acompanhamento (Trello): 
-- Documento de especificação e arquitetura (Etapa 1): 
+- Quadro de acompanhamento (Trello): https://trello.com/b/8z6w9WBW/formatech
+- Documento de especificação e arquitetura (Etapa 1): https://docs.google.com/document/d/1J410W6i5ZZJUHrE2-oC42c0n0oSF-nLuWoZoC-7WKz4/edit?tab=t.0
 - Backlog do produto e da sprint: 
 
 
