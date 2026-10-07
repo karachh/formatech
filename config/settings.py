@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'cadastros',
 ]
 
+AUTH_USER_MODEL = 'acesso.Usuario'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
