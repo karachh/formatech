@@ -45,6 +45,80 @@ Uma decisão arquitetural central orienta o sistema: **regras de qualidade da es
 - Acompanhamento: Trello
 
 
+## Como rodar o projeto
+
+Pré-requisitos: Git, Python 3.10 ou mais novo e Docker (com o Docker Compose).
+
+Rode os comandos na ordem, um por vez.
+
+1. Baixar o código e entrar na pasta:
+
+   - Linux e Windows: `git clone https://github.com/karachh/formatech.git` e depois `cd formatech`
+
+
+2. Criar o ambiente virtual, uma pasta `.venv` onde ficam as bibliotecas só deste projeto:
+
+   - Linux: `python3 -m venv .venv`
+   - Windows: `python -m venv .venv`
+
+
+3. Ativar o ambiente virtual (repita sempre que abrir um terminal novo):
+
+   - Linux: `source .venv/bin/activate`
+   - Windows: `.venv\Scripts\activate`
+
+   Se o PowerShell recusar com "execução de scripts foi desabilitada", use o Prompt de Comando (cmd).
+
+
+4. Instalar as bibliotecas do projeto (Django e o driver do PostgreSQL) com o venv ativado:
+
+   - Linux e Windows: `pip install -r requirements.txt`
+
+
+5. Criar o seu arquivo de configuração a partir do modelo:
+
+   - Linux: `cp .env.example .env`
+   - Windows: `copy .env.example .env`
+
+   Abra o `.env` e preencha `DB_PASSWORD` com uma senha qualquer. Esse arquivo fica só na sua máquina e não vai para o GitHub.
+
+
+6. Subir o banco de dados PostgreSQL em um contêiner (no Windows, o Docker Desktop precisa estar aberto):
+
+   - Linux e Windows: `docker compose up -d`
+
+
+7. Criar as tabelas no banco:
+
+   - Linux e Windows: `python manage.py migrate`
+
+
+8. Criar o seu usuário administrador (cada pessoa cria o seu, com o nome e a senha que quiser):
+
+   - Linux e Windows: `python manage.py createsuperuser`
+
+
+9. Iniciar o servidor:
+
+   - Linux e Windows: `python manage.py runserver`
+
+   Acesse http://127.0.0.1:8000/admin/ e entre com o usuário do passo 8. Para parar o servidor, `Ctrl+C`.
+
+
+### No dia a dia
+
+Depois da primeira vez, bastam três comandos para voltar a trabalhar:
+
+```bash
+source .venv/bin/activate   # ativa o ambiente virtual (no Windows: .venv\Scripts\activate)
+docker compose up -d        # sobe o banco
+python manage.py runserver  # inicia o servidor
+```
+
+Depois de um `git pull`, rode também `pip install -r requirements.txt` e `python manage.py migrate`, para pegar bibliotecas e tabelas novas que os colegas tenham adicionado.
+
+Para desligar o banco: `docker compose down` (os dados são mantidos).
+
 ## Links do projeto
 
 - Quadro de acompanhamento (Trello): https://trello.com/b/8z6w9WBW/formatech
