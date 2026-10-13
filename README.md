@@ -119,6 +119,10 @@ Depois de um `git pull`, rode também `pip install -r requirements.txt` e `pytho
 
 Para desligar o banco: `docker compose down` (os dados são mantidos).
 
+## SQL's
+
+
+
 ## Links do projeto
 
 - Quadro de acompanhamento (Trello): https://trello.com/b/8z6w9WBW/formatech
