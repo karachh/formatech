@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Ciclos · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Ciclos</h1>
+
+<h2>Abrir um ciclo</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+</form>
+
+<h2>Ciclos cadastrados</h2>
+{% if ciclos %}
+  <table>
+    <thead><tr><th>Nome</th><th>Início</th><th>Fim</th></tr></thead>
+    <tbody>
+      {% for ciclo in ciclos %}
+        <tr><td>{{ ciclo.nome }}</td><td>{{ ciclo.inicio|date:"d/m/Y" }}</td><td>{{ ciclo.fim|date:"d/m/Y" }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Nenhum ciclo cadastrado.</p>
+{% endif %}
+{% endblock %}

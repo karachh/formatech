@@ -4,6 +4,10 @@ from . import repositories
 from .models import MENSAGEM_SOBREPOSICAO, Ciclo
 
 
+def listar_ciclos():
+    return repositories.listar_ciclos()
+
+
 def abrir_ciclo(nome, inicio, fim):
     """Cria um ciclo (RF002, CA001). Levanta ValidationError com a mensagem para o usuário."""
     ciclo = Ciclo(nome=(nome or "").strip(), inicio=inicio, fim=fim)

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}FORMATECH{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 0 auto; padding: 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: .4rem; border-bottom: 1px solid #ddd; }
+    .sucesso { color: #1b5e20; }
+    .errorlist { color: #b00020; }
+  </style>
+</head>
+<body>
+  <header><strong>FORMATECH</strong></header>
+  {% for mensagem in messages %}
+    <p class="{% if mensagem.tags == 'success' %}sucesso{% endif %}">{{ mensagem }}</p>
+  {% endfor %}
+  <main>{% block conteudo %}{% endblock %}</main>
+</body>
+</html>
