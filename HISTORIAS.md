@@ -38,16 +38,21 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
   com o fim antes do início, e o PostgreSQL recusaria a consulta.
 - O admin (`CicloAdmin`) é só ferramenta de desenvolvimento. Ele permite apagar
   ciclos, o que o RF002 não prevê.
+- O repositório converte a recusa da EXCLUDE em `PeriodoOcupado`, identificando a
+  restrição pelo nome que o psycopg informa, e grava dentro de `transaction.atomic()`.
+- O serviço valida com `clean_fields()` e `clean()`, sem `full_clean()`, porque este
+  consulta o banco e o NFM001 exige regra testável sem banco. Os testes do serviço usam
+  `SimpleTestCase`, que proíbe consultas, com o repositório substituído por um dublê.
 
 ### Tarefas
 | Tarefa | Situação | Onde |
 |---|---|---|
 | T002.1 Criar a classe abstrata RegistroBase no core (criado_em / atualizado_em — RN008) | Feita | `core/models.py` |
 | T002.2 Criar o model Ciclo (nome, inicio, fim) + CheckConstraint + ExclusionConstraint (RN002) + migration | Feita | `cadastros/models.py`, `cadastros/migrations/0001_initial.py` |
-| T002.3 Criar repositório de ciclos (listar, salvar) | Pendente | |
-| T002.4 Criar serviço abrir_ciclo, que traduz a recusa de sobreposição do banco (RN002) em mensagem | Pendente | |
+| T002.3 Criar repositório de ciclos (listar, salvar) | Feita | `cadastros/repositories.py` |
+| T002.4 Criar serviço abrir_ciclo, que traduz a recusa de sobreposição do banco (RN002) em mensagem | Feita | `cadastros/services.py` |
 | T002.5 Criar tela de lista e cadastro de ciclos (form, view, template, urls) | Pendente | |
-| T002.6 Testes da regra de sobreposição (inclui datas que se encostam e fim antes do início) | Feita no modelo e no banco (12 testes); faltam os do serviço | `cadastros/tests/test_ciclo.py` |
+| T002.6 Testes da regra de sobreposição (inclui datas que se encostam e fim antes do início) | Feita (22 testes: modelo, banco, repositório e serviço) | `cadastros/tests/` |
 | T002.7 Permitir encerrar um ciclo (situação aberto/encerrado + ação na tela — RF002) | Pendente | |
 
 ### Mudanças em relação ao plano
