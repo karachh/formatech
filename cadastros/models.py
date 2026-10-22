@@ -6,6 +6,8 @@ from django.db.models import F, Func, Q
 
 from core.models import RegistroBase
 
+MENSAGEM_SOBREPOSICAO = "Já existe um ciclo nesse período."
+
 
 class Periodo(Func):
     """Função daterange() do PostgreSQL: o intervalo entre duas datas."""
@@ -32,7 +34,7 @@ class Ciclo(RegistroBase):
                         RangeOperators.OVERLAPS,
                     ),
                 ],
-                violation_error_message="Já existe um ciclo nesse período.",
+                violation_error_message=MENSAGEM_SOBREPOSICAO,
             ),
         ]
 
