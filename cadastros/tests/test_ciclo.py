@@ -69,6 +69,15 @@ class CicloTests(TestCase):
         with self.assertRaisesMessage(IntegrityError, "ciclo_sem_sobreposicao"), transaction.atomic():
             outro.save()
 
+    # Situação do ciclo (T002.7)
+
+    def test_ciclo_nasce_aberto(self):
+        self.assertEqual(self.ciclo.situacao, Ciclo.Situacao.ABERTO)
+
+    def test_banco_recusa_situacao_fora_da_lista(self):
+        with self.assertRaisesMessage(IntegrityError, "ciclo_situacao_valida"), transaction.atomic():
+            Ciclo.objects.filter(pk=self.ciclo.pk).update(situacao="pausado")
+
     # Validação do Django (full_clean), a mesma que os formulários e o admin usam
 
     def test_validacao_aponta_fim_antes_do_inicio_sem_quebrar(self):

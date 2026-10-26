@@ -17,13 +17,20 @@ class Periodo(Func):
 
 
 class Ciclo(RegistroBase):
+    class Situacao(models.TextChoices):
+        ABERTO = "aberto", "Aberto"
+        ENCERRADO = "encerrado", "Encerrado"
+
     nome = models.CharField(max_length=100)
     inicio = models.DateField("início")
     fim = models.DateField()
+    situacao = models.CharField("situação", max_length=10, choices=Situacao, default=Situacao.ABERTO)
 
     class Meta:
         constraints = [
             models.CheckConstraint(condition=Q(fim__gt=F("inicio")), name="ciclo_fim_depois_inicio"),
+            # choices só vale nos formulários; o CHECK impede outro valor gravado por fora.
+            models.CheckConstraint(condition=Q(situacao__in=["aberto", "encerrado"]), name="ciclo_situacao_valida"),
             # RN002: o ciclo de uma formação vem da data, então ciclos não se sobrepõem.
             # '[]' inclui o primeiro e o último dia: ciclos que se encostam no mesmo dia conflitam.
             ExclusionConstraint(

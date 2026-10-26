@@ -15,10 +15,21 @@
 <h2>Ciclos cadastrados</h2>
 {% if ciclos %}
   <table>
-    <thead><tr><th>Nome</th><th>Início</th><th>Fim</th></tr></thead>
+    <thead><tr><th>Nome</th><th>Início</th><th>Fim</th><th>Situação</th><th></th></tr></thead>
     <tbody>
       {% for ciclo in ciclos %}
-        <tr><td>{{ ciclo.nome }}</td><td>{{ ciclo.inicio|date:"d/m/Y" }}</td><td>{{ ciclo.fim|date:"d/m/Y" }}</td></tr>
+        <tr>
+          <td>{{ ciclo.nome }}</td><td>{{ ciclo.inicio|date:"d/m/Y" }}</td><td>{{ ciclo.fim|date:"d/m/Y" }}</td>
+          <td>{{ ciclo.get_situacao_display }}</td>
+          <td>
+            {% if ciclo.situacao == "aberto" %}
+              <form method="post" action="{% url 'cadastros:encerrar_ciclo' ciclo.id %}">
+                {% csrf_token %}
+                <button type="submit">Encerrar</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>

@@ -11,6 +11,11 @@ def listar_ciclos():
     return list(Ciclo.objects.order_by("-inicio"))
 
 
+def buscar_ciclo(ciclo_id):
+    """Levanta Ciclo.DoesNotExist se o id não existir."""
+    return Ciclo.objects.get(pk=ciclo_id)
+
+
 def salvar_ciclo(ciclo):
     try:
         # O atomic() isola a falha: sem ele, a transação de quem chamou fica inutilizável.

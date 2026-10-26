@@ -13,6 +13,14 @@ class RepositorioCicloTests(TestCase):
         recente = Ciclo.objects.create(nome="2026", inicio=date(2026, 2, 1), fim=date(2026, 12, 15))
         self.assertEqual(repositories.listar_ciclos(), [recente, antigo])
 
+    def test_busca_o_ciclo_pelo_id(self):
+        ciclo = Ciclo.objects.create(nome="2026", inicio=date(2026, 2, 1), fim=date(2026, 12, 15))
+        self.assertEqual(repositories.buscar_ciclo(ciclo.pk), ciclo)
+
+    def test_buscar_ciclo_inexistente_levanta_does_not_exist(self):
+        with self.assertRaises(Ciclo.DoesNotExist):
+            repositories.buscar_ciclo(999_999)
+
     def test_salva_e_devolve_o_ciclo(self):
         ciclo = repositories.salvar_ciclo(Ciclo(nome="2026", inicio=date(2026, 2, 1), fim=date(2026, 12, 15)))
         self.assertIsNotNone(ciclo.pk)

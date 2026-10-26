@@ -19,3 +19,12 @@ def abrir_ciclo(nome, inicio, fim):
         return repositories.salvar_ciclo(ciclo)
     except repositories.PeriodoOcupado:
         raise ValidationError(MENSAGEM_SOBREPOSICAO)
+
+
+def encerrar_ciclo(ciclo_id):
+    """Encerra um ciclo aberto (RF002, T002.7). Ciclo inexistente propaga Ciclo.DoesNotExist."""
+    ciclo = repositories.buscar_ciclo(ciclo_id)
+    if ciclo.situacao == Ciclo.Situacao.ENCERRADO:
+        raise ValidationError(f"O ciclo “{ciclo}” já está encerrado.")
+    ciclo.situacao = Ciclo.Situacao.ENCERRADO
+    return repositories.salvar_ciclo(ciclo)
