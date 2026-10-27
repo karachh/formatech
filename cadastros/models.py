@@ -48,6 +48,11 @@ class Ciclo(RegistroBase):
     def __str__(self):
         return self.nome
 
+    @property
+    def datas_editaveis(self):
+        # As datas definem quais formações pertencem ao ciclo (RN002): após o encerramento, ficam congeladas.
+        return self.situacao == self.Situacao.ABERTO
+
     def clean(self):
         # Espelha o CHECK ciclo_fim_depois_inicio, com mensagem amigável no campo fim.
         # O erro no campo fim faz o Django pular a validação da sobreposição, que quebraria

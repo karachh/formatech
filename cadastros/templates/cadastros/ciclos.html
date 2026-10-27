@@ -22,6 +22,7 @@
           <td>{{ ciclo.nome }}</td><td>{{ ciclo.inicio|date:"d/m/Y" }}</td><td>{{ ciclo.fim|date:"d/m/Y" }}</td>
           <td>{{ ciclo.get_situacao_display }}</td>
           <td>
+            <a href="{% url 'cadastros:editar_ciclo' ciclo.id %}">Editar</a>
             {% if ciclo.situacao == "aberto" %}
               <form method="post" action="{% url 'cadastros:encerrar_ciclo' ciclo.id %}">
                 {% csrf_token %}

@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Editar ciclo · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Editar ciclo</h1>
+
+{% if not ciclo.datas_editaveis %}
+  <p>Ciclo encerrado: só o nome pode ser alterado.</p>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+  <a href="{% url 'cadastros:ciclos' %}">Cancelar</a>
+</form>
+{% endblock %}

@@ -74,3 +74,48 @@ class TelaEncerrarCicloTests(TestCase):
     def test_ciclo_inexistente_da_404(self):
         url = reverse("cadastros:encerrar_ciclo", args=[999_999])
         self.assertEqual(self.client.post(url).status_code, 404)
+
+
+class TelaEditarCicloTests(TestCase):
+    def setUp(self):
+        self.ciclo = Ciclo.objects.create(nome="2027", inicio=date(2027, 2, 1), fim=date(2027, 12, 15))
+        self.url = reverse("cadastros:editar_ciclo", args=[self.ciclo.pk])
+
+    def postar(self, nome="Perseverança 2027", inicio="2027-03-01", fim="2027-12-15"):
+        return self.client.post(self.url, {"nome": nome, "inicio": inicio, "fim": fim}, follow=True)
+
+    def test_lista_tem_link_editar(self):
+        self.assertContains(self.client.get(URL), f'href="{self.url}"')
+
+    def test_formulario_vem_preenchido(self):
+        resposta = self.client.get(self.url)
+        self.assertContains(resposta, 'value="2027"')
+        self.assertContains(resposta, 'value="2027-02-01"')
+
+    def test_editar_salva_e_volta_para_a_lista(self):
+        resposta = self.postar()
+        self.assertRedirects(resposta, URL)
+        self.assertContains(resposta, "Ciclo “Perseverança 2027” alterado.")
+        self.ciclo.refresh_from_db()
+        self.assertEqual((self.ciclo.nome, self.ciclo.inicio), ("Perseverança 2027", date(2027, 3, 1)))
+
+    def test_sobreposicao_mostra_erro_e_nao_salva(self):
+        Ciclo.objects.create(nome="2028", inicio=date(2028, 2, 1), fim=date(2028, 12, 15))
+        resposta = self.postar(fim="2028-03-01")
+        self.assertContains(resposta, "Já existe um ciclo nesse período.")
+        self.ciclo.refresh_from_db()
+        self.assertEqual(self.ciclo.fim, date(2027, 12, 15))
+
+    def test_ciclo_encerrado_tem_datas_desabilitadas_e_ignora_datas_enviadas(self):
+        Ciclo.objects.filter(pk=self.ciclo.pk).update(situacao=Ciclo.Situacao.ENCERRADO)
+        tela = self.client.get(self.url)
+        self.assertContains(tela, "só o nome pode ser alterado")
+        self.assertContains(tela, "disabled", count=2)
+        resposta = self.postar(nome="2027 (turma A)", inicio="2026-01-01")
+        self.assertRedirects(resposta, URL)
+        self.ciclo.refresh_from_db()
+        self.assertEqual((self.ciclo.nome, self.ciclo.inicio), ("2027 (turma A)", date(2027, 2, 1)))
+
+    def test_ciclo_inexistente_da_404(self):
+        url = reverse("cadastros:editar_ciclo", args=[999_999])
+        self.assertEqual(self.client.get(url).status_code, 404)
