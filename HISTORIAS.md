@@ -43,6 +43,9 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
 - O serviço valida com `clean_fields()` e `clean()`, sem `full_clean()`, porque este
   consulta o banco e o NFM001 exige regra testável sem banco. Os testes do serviço usam
   `SimpleTestCase`, que proíbe consultas, com o repositório substituído por um dublê.
+- Encerrar (T002.7): `situacao` usa `TextChoices` e tem o CHECK `ciclo_situacao_valida`,
+  porque `choices` só vale nos formulários. A view só aceita POST (GET recebe 405),
+  ciclo inexistente dá 404 e encerrar um ciclo já encerrado mostra mensagem de erro.
 
 ### Tarefas
 | Tarefa | Situação | Onde |
@@ -51,9 +54,10 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
 | T002.2 Criar o model Ciclo (nome, inicio, fim) + CheckConstraint + ExclusionConstraint (RN002) + migration | Feita | `cadastros/models.py`, `cadastros/migrations/0001_initial.py` |
 | T002.3 Criar repositório de ciclos (listar, salvar) | Feita | `cadastros/repositories.py` |
 | T002.4 Criar serviço abrir_ciclo, que traduz a recusa de sobreposição do banco (RN002) em mensagem | Feita | `cadastros/services.py` |
-| T002.5 Criar tela de lista e cadastro de ciclos (form, view, template, urls) | Pendente | |
+| T002.5 Criar tela de lista e cadastro de ciclos (form, view, template, urls) | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/templates/cadastros/ciclos.html`, `core/templates/core/base.html` |
 | T002.6 Testes da regra de sobreposição (inclui datas que se encostam e fim antes do início) | Feita (22 testes: modelo, banco, repositório e serviço) | `cadastros/tests/` |
-| T002.7 Permitir encerrar um ciclo (situação aberto/encerrado + ação na tela — RF002) | Pendente | |
+| T002.7 Permitir encerrar um ciclo (situação aberto/encerrado + ação na tela — RF002) | Feita | `cadastros/models.py`, `cadastros/migrations/0002_ciclo_situacao.py`, `services.encerrar_ciclo`, `views.encerrar_ciclo` |
+| T002.8 Permitir editar um ciclo (nome e datas — RF002) | Pendente | |
 
 ### Mudanças em relação ao plano
 - A RN002 é garantida no banco (EXCLUDE), como definido no seminário da Etapa 2.
@@ -62,3 +66,5 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
   só lista e salva, e o serviço (T002.4) traduz a recusa do banco em mensagem.
 - Campos `inicio` e `fim` em vez de `data_inicio` e `data_fim`, seguindo a regra de
   nomes do `AGENTS.md`.
+- T002.8 (editar ciclo) incluída em 26/10: o RF002 prevê "criar, consultar, editar e
+  encerrar", e nenhuma tarefa cobria a edição.
