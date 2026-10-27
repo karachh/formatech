@@ -4,7 +4,25 @@
 
 {% block conteudo %}
 <h1>Início</h1>
-<p>Olá, {{ user.username }}.</p>
+<p>Olá, {{ user.username }} ({{ user.get_perfil_display }}).</p>
+
+<nav>
+  <ul>
+    <li><a href="#">Cronograma</a></li>
+    {% if user.perfil == "coordenador" %}
+      <li><a href="{% url 'cadastros:ciclos' %}">Ciclos</a></li>
+      <li><a href="#">Perseverantes</a></li>
+      <li><a href="#">Formadores</a></li>
+      <li><a href="#">Temas</a></li>
+      <li><a href="#">Presença</a></li>
+      <li><a href="#">Consultas</a></li>
+      <li><a href="#">Exportação</a></li>
+    {% else %}
+      <li><a href="#">Temas que já ministrei</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
 <form method="post" action="{% url 'acesso:logout' %}">
   {% csrf_token %}
   <button type="submit">Sair</button>
