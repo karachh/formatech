@@ -77,3 +77,51 @@ class EncerrarCicloTests(SimpleTestCase):
         with self.assertRaises(Ciclo.DoesNotExist):
             services.encerrar_ciclo(1)
         salvar.assert_not_called()
+
+
+@mock.patch("cadastros.services.repositories.salvar_ciclo", side_effect=lambda ciclo: ciclo)
+@mock.patch("cadastros.services.repositories.buscar_ciclo")
+class EditarCicloTests(SimpleTestCase):
+    NOVO_INICIO = date(2026, 3, 1)
+
+    def ciclo(self, situacao=Ciclo.Situacao.ABERTO):
+        return Ciclo(pk=1, nome="2026", inicio=INICIO, fim=FIM, situacao=situacao)
+
+    def test_altera_nome_e_datas_de_ciclo_aberto(self, buscar, salvar):
+        buscar.return_value = self.ciclo()
+        ciclo = services.editar_ciclo(1, "  Perseverança 2026  ", self.NOVO_INICIO, FIM)
+        salvar.assert_called_once_with(ciclo)
+        self.assertEqual((ciclo.nome, ciclo.inicio), ("Perseverança 2026", self.NOVO_INICIO))
+
+    def test_ciclo_encerrado_aceita_mudar_so_o_nome(self, buscar, salvar):
+        buscar.return_value = self.ciclo(Ciclo.Situacao.ENCERRADO)
+        ciclo = services.editar_ciclo(1, "Perseverança 2026", INICIO, FIM)
+        self.assertEqual(ciclo.nome, "Perseverança 2026")
+        salvar.assert_called_once()
+
+    def test_ciclo_encerrado_recusa_mudar_datas(self, buscar, salvar):
+        buscar.return_value = self.ciclo(Ciclo.Situacao.ENCERRADO)
+        with self.assertRaises(ValidationError) as erro:
+            services.editar_ciclo(1, "2026", self.NOVO_INICIO, FIM)
+        self.assertEqual(erro.exception.messages, ["Ciclo encerrado: as datas não podem ser alteradas."])
+        salvar.assert_not_called()
+
+    def test_recusa_fim_antes_do_inicio(self, buscar, salvar):
+        buscar.return_value = self.ciclo()
+        with self.assertRaises(ValidationError) as erro:
+            services.editar_ciclo(1, "2026", FIM, INICIO)
+        self.assertIn("fim", erro.exception.message_dict)
+        salvar.assert_not_called()
+
+    def test_traduz_sobreposicao_em_mensagem(self, buscar, salvar):
+        buscar.return_value = self.ciclo()
+        salvar.side_effect = PeriodoOcupado
+        with self.assertRaises(ValidationError) as erro:
+            services.editar_ciclo(1, "2026", self.NOVO_INICIO, FIM)
+        self.assertEqual(erro.exception.messages, ["Já existe um ciclo nesse período."])
+
+    def test_ciclo_inexistente_propaga_does_not_exist(self, buscar, salvar):
+        buscar.side_effect = Ciclo.DoesNotExist
+        with self.assertRaises(Ciclo.DoesNotExist):
+            services.editar_ciclo(1, "2026", INICIO, FIM)
+        salvar.assert_not_called()

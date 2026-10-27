@@ -23,6 +23,27 @@ def ciclos(request):
     return render(request, "cadastros/ciclos.html", {"form": form, "ciclos": services.listar_ciclos()})
 
 
+def editar_ciclo(request, ciclo_id):
+    try:
+        ciclo = services.buscar_ciclo(ciclo_id)
+    except Ciclo.DoesNotExist:
+        raise Http404("Ciclo não encontrado.")
+    form = CicloForm(
+        request.POST or None,
+        initial={"nome": ciclo.nome, "inicio": ciclo.inicio, "fim": ciclo.fim},
+        datas_editaveis=ciclo.datas_editaveis,
+    )
+    if request.method == "POST" and form.is_valid():
+        try:
+            ciclo = services.editar_ciclo(ciclo_id, **form.cleaned_data)
+        except ValidationError as erro:
+            form.add_error(None, erro)
+        else:
+            messages.success(request, f"Ciclo “{ciclo}” alterado.")
+            return redirect("cadastros:ciclos")
+    return render(request, "cadastros/editar_ciclo.html", {"form": form, "ciclo": ciclo})
+
+
 # Só POST: um GET (link, pré-carregamento do navegador) não pode alterar dados.
 @require_POST
 def encerrar_ciclo(request, ciclo_id):
