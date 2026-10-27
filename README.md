@@ -120,8 +120,7 @@ Depois de um `git pull`, rode também `pip install -r requirements.txt` e `pytho
 Para desligar o banco: `docker compose down` (os dados são mantidos).
 
 ## SQL's
-
-
+ - SQL's de exemplo, utilizados no seminario da etapa 2, estao em .banco (schemal.sql, demo.sql, dados.sql)
 
 ## Links do projeto
 
