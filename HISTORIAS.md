@@ -46,6 +46,10 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
 - Encerrar (T002.7): `situacao` usa `TextChoices` e tem o CHECK `ciclo_situacao_valida`,
   porque `choices` só vale nos formulários. A view só aceita POST (GET recebe 405),
   ciclo inexistente dá 404 e encerrar um ciclo já encerrado mostra mensagem de erro.
+- Editar (T002.8): ciclo encerrado só tem o nome alterado. As datas definem quais
+  formações pertencem ao ciclo (RN002), por isso ficam congeladas após o encerramento.
+  A regra fica em `Ciclo.datas_editaveis`; o formulário desabilita as datas e o serviço
+  recusa a mudança mesmo que ela chegue. Abrir e editar compartilham `_validar_e_salvar`.
 
 ### Tarefas
 | Tarefa | Situação | Onde |
@@ -57,7 +61,7 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
 | T002.5 Criar tela de lista e cadastro de ciclos (form, view, template, urls) | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/templates/cadastros/ciclos.html`, `core/templates/core/base.html` |
 | T002.6 Testes da regra de sobreposição (inclui datas que se encostam e fim antes do início) | Feita (22 testes: modelo, banco, repositório e serviço) | `cadastros/tests/` |
 | T002.7 Permitir encerrar um ciclo (situação aberto/encerrado + ação na tela — RF002) | Feita | `cadastros/models.py`, `cadastros/migrations/0002_ciclo_situacao.py`, `services.encerrar_ciclo`, `views.encerrar_ciclo` |
-| T002.8 Permitir editar um ciclo (nome e datas — RF002) | Pendente | |
+| T002.8 Permitir editar um ciclo (nome e datas — RF002) | Feita | `Ciclo.datas_editaveis`, `services.editar_ciclo`, `views.editar_ciclo`, `cadastros/templates/cadastros/editar_ciclo.html` |
 
 ### Mudanças em relação ao plano
 - A RN002 é garantida no banco (EXCLUDE), como definido no seminário da Etapa 2.
