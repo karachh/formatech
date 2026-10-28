@@ -11,6 +11,82 @@ Cada história tem uma seção com:
 
 ---
 
+---
+
+## US001 — Login no sistema
+
+**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF001 · **Situação:** em andamento
+
+### O que faz
+Como coordenador ou formador, quero entrar no sistema com login e senha, para
+acessar apenas as telas permitidas ao meu perfil.
+
+Critérios de aceitação: o login com usuário e senha cadastrados abre a tela inicial
+do perfil (o coordenador vê o menu completo; o formador vê apenas o cronograma e os
+temas que já ministrou); tentar acessar uma tela sem estar logado redireciona para a
+tela de login. A senha é armazenada com hash (NFS001).
+
+### Como foi feita
+- `Usuario` herda de `RegistroBase` (RN008) e de `AbstractUser`, que traz usuário,
+  e-mail e a senha com hash do Django. O campo `perfil` usa `TextChoices`
+  (coordenador/formador), com `formador` como padrão por ser o perfil de menor
+  privilégio. O CHECK `usuario_perfil_valido` impede outro valor gravado por fora,
+  porque `choices` só vale nos formulários.
+- Não existe tela de cadastro: o sistema é de uso interno, e os usuários são criados
+  pelo coordenador no admin. Uma tela pública de cadastro deixaria qualquer pessoa
+  criar conta.
+- O login segue as camadas do AGENTS.md:
+  - `LoginForm` só converte o que veio da tela.
+  - `repositories.autenticar_usuario` chama `authenticate()`, que consulta o banco.
+  - `services.autenticar` devolve o usuário ou levanta `ValidationError` com a
+    mensagem "Usuário ou senha inválidos.", genérica de propósito: não revela se o
+    erro foi no usuário ou na senha. O serviço não recebe `request`.
+  - A view chama o serviço e, em seguida, `login()` do Django, que grava a sessão e
+    por isso precisa do `request`. Os apelidos `login_django` e `logout_django`
+    evitam que o import seja sobrescrito pelas views de mesmo nome.
+- O logout só aceita POST (`@require_POST`): um GET (link, pré-carregamento do
+  navegador) não pode encerrar a sessão. O botão "Sair" é um formulário com CSRF.
+- Login obrigatório em todas as telas pelo `LoginRequiredMiddleware` do Django
+  (5.1+), colocado depois do `AuthenticationMiddleware`. Esquecer de proteger uma
+  tela deixa de ser possível: as telas dos próximos módulos já nascem protegidas, e só
+  a tela de login é liberada, com `@login_not_required`. O destino do redirecionamento
+  vem de `LOGIN_URL`.
+- O perfil é verificado por view, com o decorator `coordenador_required`: anônimo vai
+  ao login (middleware) e formador recebe 403, porque já está autenticado e falta
+  permissão, não identidade. Foi aplicado às três telas de ciclos, que são cadastro de
+  base.
+- Esconder um link no menu não protege a tela: quem digita a URL ignora o menu. A
+  proteção real é o decorator; o menu é só conveniência.
+- A tela inicial (`acesso:home`) estende `core/base.html` e mostra o menu conforme
+  `user.perfil`.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T001.1 Configurar autenticação do Django (LOGIN_URL, views de login e logout) | Feita | `config/settings.py`, `acesso/forms.py`, `acesso/repositories.py`, `acesso/services.py`, `acesso/views.py`, `acesso/urls.py`, `config/urls.py` |
+| T001.2 Adicionar perfil (coordenador/formador) ao modelo Usuario + migration | Feita | `acesso/models.py`, `acesso/admin.py`, `acesso/migrations/0002_alter_usuario_options_usuario_atualizado_em_and_more.py` |
+| T001.3 Criar o template da tela de login | Feita | `acesso/templates/acesso/login.html` |
+| T001.4 Exigir login em todas as telas e restringir telas por perfil | Feita | `config/settings.py` (middleware), `acesso/decorators.py`, `cadastros/views.py` |
+| T001.5 Criar tela inicial com menu conforme o perfil | Feita, com links provisórios (ver abaixo) | `acesso/templates/acesso/home.html`, `acesso/views.py` |
+| T001.6 Testes: redirecionamento sem login, menu por perfil e senha com hash (NFS001) | Feita (11 testes) | `acesso/tests/test_autenticacao.py` |
+
+### Mudanças em relação ao plano
+- A T001.1 não cita as camadas de serviço e repositório, mas o AGENTS.md as exige;
+  por isso o login foi dividido em formulário, repositório, serviço e view.
+- A migração da T001.2 inclui `criado_em` e `atualizado_em` (RN008), além do `perfil`.
+  Como a tabela já tinha usuários, o Django pediu um valor padrão para as linhas
+  existentes (`timezone.now`).
+- Na T001.4, o login é exigido por middleware global, e não por `@login_required` em
+  cada view, e a restrição por perfil foi aplicada em `cadastros/views.py`, arquivo de
+  outra história. Os testes de ciclos (`cadastros/tests/test_tela_ciclos.py`) passaram
+  a entrar como coordenador, com o mixin `ComoCoordenador`.
+- Na T001.5, só "Ciclos" tem rota real. Os demais links do menu (`#`) serão ligados
+  quando as telas existirem. "Temas que já ministrei" depende do vínculo entre
+  `Usuario` e `Formador`, que não existe ainda (o model `Formador` é de outra história).
+  Esse vínculo precisa ser decidido pela equipe.
+- O botão "Sair" está na home. Quando houver um menu global no `base.html`, ele pode
+  migrar para lá.
+
 ## US002 — Abrir um ciclo
 
 **Responsável:** Cauã · **Sprint:** 1 · **RF:** RF002 · **Situação:** em andamento
