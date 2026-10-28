@@ -1,4 +1,5 @@
 from django.contrib.auth import login as login_django, logout as logout_django
+from django.contrib.auth.decorators import login_not_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -7,6 +8,7 @@ from . import services
 from .forms import LoginForm
 
 
+@login_not_required
 def login(request):
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
