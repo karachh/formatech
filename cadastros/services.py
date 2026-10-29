@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from . import repositories
-from .models import MENSAGEM_SOBREPOSICAO, Ciclo
+from .models import MENSAGEM_SOBREPOSICAO, MENSAGEM_TEMA_REPETIDO, Ciclo, Tema
 
 
 def listar_ciclos():
@@ -45,3 +45,43 @@ def _validar_e_salvar(ciclo):
         return repositories.salvar_ciclo(ciclo)
     except repositories.PeriodoOcupado:
         raise ValidationError(MENSAGEM_SOBREPOSICAO)
+
+
+def listar_temas():
+    return repositories.listar_temas()
+
+
+def buscar_tema(tema_id):
+    """Tema inexistente propaga Tema.DoesNotExist."""
+    return repositories.buscar_tema(tema_id)
+
+
+def cadastrar_tema(nome, tipo, rotulo=""):
+    """Cria um tema (RF005)."""
+    return _validar_e_salvar_tema(Tema(nome=(nome or "").strip(), tipo=tipo, rotulo=(rotulo or "").strip()))
+
+
+def editar_tema(tema_id, nome, tipo, rotulo=""):
+    """Altera um tema (RF005)."""
+    tema = repositories.buscar_tema(tema_id)
+    tema.nome, tema.tipo, tema.rotulo = (nome or "").strip(), tipo, (rotulo or "").strip()
+    return _validar_e_salvar_tema(tema)
+
+
+def carregar_temas(linhas):
+    """Carga inicial: cria os temas que ainda não existem. Devolve quantos foram criados."""
+    criados = 0
+    for linha in linhas:
+        nome = (linha["nome"] or "").strip()
+        if nome and not repositories.existe_tema(nome):
+            cadastrar_tema(nome, linha["tipo"], linha.get("rotulo", ""))
+            criados += 1
+    return criados
+
+
+def _validar_e_salvar_tema(tema):
+    tema.clean_fields()
+    try:
+        return repositories.salvar_tema(tema)
+    except repositories.NomeDeTemaEmUso:
+        raise ValidationError(MENSAGEM_TEMA_REPETIDO)
