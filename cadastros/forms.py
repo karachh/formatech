@@ -1,5 +1,6 @@
 from django import forms
 
+from .models import Tema
 # type="date" mostra o calendário do navegador, que envia a data no formato AAAA-MM-DD.
 CAMPO_DATA = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 
@@ -15,3 +16,11 @@ class CicloForm(forms.Form):
         super().__init__(*args, **kwargs)
         # disabled ignora o valor enviado e usa o initial: as datas voltam como estavam.
         self.fields["inicio"].disabled = self.fields["fim"].disabled = not datas_editaveis
+
+
+class TemaForm(forms.Form):
+    """Só converte o que veio da tela. Quem valida a regra é o services."""
+
+    nome = forms.CharField(max_length=150)
+    tipo = forms.ChoiceField(choices=Tema.Tipo.choices)
+    rotulo = forms.CharField(label="Rótulo na apostila", max_length=50, required=False)
