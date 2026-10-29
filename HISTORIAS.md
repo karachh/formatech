@@ -15,7 +15,7 @@ Cada história tem uma seção com:
 
 ## US001 — Login no sistema
 
-**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF001 · **Situação:** em andamento
+**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF001 · **Situação:** finalizado
 
 ### O que faz
 Como coordenador ou formador, quero entrar no sistema com login e senha, para
@@ -148,3 +148,58 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
   nomes do `AGENTS.md`.
 - T002.8 (editar ciclo) incluída em 26/10: o RF002 prevê "criar, consultar, editar e
   encerrar", e nenhuma tarefa cobria a edição.
+
+
+
+---
+
+## US005 — Cadastrar temas da apostila
+
+**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF005 · **Situação:** em andamento
+
+### O que faz
+Como coordenador, quero cadastrar temas classificando cada um como obrigatório
+(apostila) ou opcional, para que o sistema saiba o que entra na cobertura da apostila.
+
+Critérios de aceitação: o cadastro de tema com classificação apostila/opcional aparece
+na lista de temas e fica disponível para escolher na montagem do cronograma.
+
+### Como foi feita
+- `Tema` herda de `RegistroBase` (RN008). O campo `tipo` usa `TextChoices`
+  (apostila/opcional) e tem o CHECK `tema_tipo_valido`, porque `choices` só vale nos
+  formulários. O `rotulo` é opcional e guarda o número da apostila (1 ou 2).
+- O `nome` é único (`tema_nome_unico`): a regra fica no banco e vale mesmo para
+  gravações que não passam pela tela. O repositório identifica a restrição pelo nome
+  que o psycopg informa e a converte em `NomeDeTemaEmUso`; o serviço a traduz na
+  mensagem "Já existe um tema com esse nome.".
+- Camadas do AGENTS.md: o formulário só converte o que veio da tela; o serviço
+  (`cadastrar_tema`, `editar_tema`) valida com `clean_fields()`, sem `full_clean()`,
+  e não recebe `request`; só o repositório usa o ORM; a view chama o serviço e traduz
+  o `ValidationError` em erro do formulário.
+- As telas (lista com cadastro, e edição) exigem `@coordenador_required`: anônimo vai
+  ao login e formador recebe 403. A exclusão não existe, pois o RF005 não a prevê.
+- A carga inicial é o comando `python manage.py carregar_temas`, que lê
+  `cadastros/dados/temas.csv` (26 temas, separador `;`, UTF-8). O serviço
+  `carregar_temas` só cria os que ainda não existem, então o comando pode rodar
+  várias vezes sem duplicar.
+- O link "Temas" da home do coordenador passou a apontar para `/temas/`.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T005.1 Criar o model Tema (nome, tipo apostila/opcional, rótulo da apostila) + migration | Feita | `cadastros/models.py`, `cadastros/admin.py`, `cadastros/migrations/<<nome da migração>>` |
+| T005.2 Criar repositório e serviço de temas | Feita | `cadastros/repositories.py`, `cadastros/services.py` |
+| T005.3 Criar telas de lista, cadastro e edição de tema | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/temas.html`, `cadastros/templates/cadastros/editar_tema.html` |
+| T005.4 Carregar os temas reais da apostila (carga inicial) | Feita (26 temas) | `cadastros/management/commands/carregar_temas.py`, `cadastros/dados/temas.csv` |
+| T005.5 Testes do cadastro e da classificação | Feita (<<n>> testes) | `cadastros/tests/test_temas.py` |
+
+### Mudanças em relação ao plano
+- O campo se chama `nome`, como no Trello e em `Ciclo.nome`, e não `titulo`, como no
+  `banco/schema.sql` (exemplo do seminário, não o esquema oficial).
+- Unicidade do nome e rótulo opcional foram decisões nossas: a tarefa não as
+  especifica. O rótulo guarda só o número da apostila.
+- O vínculo do tema com a montagem do cronograma ("fica disponível para escolher")
+  depende do módulo Cronograma, que ainda não existe. Esta história entrega a lista
+  de temas que ele vai consumir.
+- A edição de tema (T005.3) não altera o `HISTORIAS.md` da US001: os links de menu
+  continuam provisórios, exceto "Temas".

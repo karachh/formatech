@@ -8,4 +8,6 @@ urlpatterns = [
     path('ciclos/', views.ciclos, name='ciclos'),
     path('ciclos/<int:ciclo_id>/editar/', views.editar_ciclo, name='editar_ciclo'),
     path('ciclos/<int:ciclo_id>/encerrar/', views.encerrar_ciclo, name='encerrar_ciclo'),
+    path('temas/', views.temas, name='temas'),
+    path('temas/<int:tema_id>/editar/', views.editar_tema, name='editar_tema'),
 ]

@@ -7,9 +7,8 @@ from django.views.decorators.http import require_POST
 from acesso.decorators import coordenador_required
 
 from . import services
-from .forms import CicloForm
-from .models import Ciclo
-
+from .forms import CicloForm, TemaForm
+from .models import Ciclo, Tema
 
 @coordenador_required
 def ciclos(request):
@@ -60,3 +59,39 @@ def encerrar_ciclo(request, ciclo_id):
     else:
         messages.success(request, f"Ciclo “{ciclo}” encerrado.")
     return redirect("cadastros:ciclos")
+
+
+
+@coordenador_required
+def temas(request):
+    form = TemaForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            tema = services.cadastrar_tema(**form.cleaned_data)
+        except ValidationError as erro:
+            form.add_error(None, erro)
+        else:
+            messages.success(request, f"Tema “{tema}” cadastrado.")
+            return redirect("cadastros:temas")
+    return render(request, "cadastros/temas.html", {"form": form, "temas": services.listar_temas()})
+
+
+@coordenador_required
+def editar_tema(request, tema_id):
+    try:
+        tema = services.buscar_tema(tema_id)
+    except Tema.DoesNotExist:
+        raise Http404("Tema não encontrado.")
+    form = TemaForm(
+        request.POST or None,
+        initial={"nome": tema.nome, "tipo": tema.tipo, "rotulo": tema.rotulo},
+    )
+    if request.method == "POST" and form.is_valid():
+        try:
+            tema = services.editar_tema(tema_id, **form.cleaned_data)
+        except ValidationError as erro:
+            form.add_error(None, erro)
+        else:
+            messages.success(request, f"Tema “{tema}” alterado.")
+            return redirect("cadastros:temas")
+    return render(request, "cadastros/editar_tema.html", {"form": form, "tema": tema})

@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Temas · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Temas da apostila</h1>
+
+<h2>Cadastrar tema</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+</form>
+
+<h2>Temas cadastrados</h2>
+{% if temas %}
+  <table>
+    <thead><tr><th>Nome</th><th>Tipo</th><th>Rótulo</th><th></th></tr></thead>
+    <tbody>
+      {% for tema in temas %}
+        <tr>
+          <td>{{ tema.nome }}</td>
+          <td>{{ tema.get_tipo_display }}</td>
+          <td>{{ tema.rotulo }}</td>
+          <td><a href="{% url 'cadastros:editar_tema' tema.id %}">Editar</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Nenhum tema cadastrado.</p>
+{% endif %}
+{% endblock %}

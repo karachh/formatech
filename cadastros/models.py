@@ -7,6 +7,7 @@ from django.db.models import F, Func, Q
 from core.models import RegistroBase
 
 MENSAGEM_SOBREPOSICAO = "Já existe um ciclo nesse período."
+MENSAGEM_TEMA_REPETIDO = "Já existe um tema com esse nome."
 
 
 class Periodo(Func):
@@ -59,3 +60,23 @@ class Ciclo(RegistroBase):
         # com DataError: o PostgreSQL não monta um daterange com o fim antes do início.
         if self.inicio and self.fim and self.fim <= self.inicio:
             raise ValidationError({"fim": "O fim do ciclo deve ser depois do início."})
+
+
+class Tema(RegistroBase):
+    class Tipo(models.TextChoices):
+        APOSTILA = "apostila", "Apostila"
+        OPCIONAL = "opcional", "Opcional"
+
+    nome = models.CharField(max_length=150)
+    tipo = models.CharField(max_length=10, choices=Tipo, default=Tipo.APOSTILA)
+    rotulo = models.CharField("rótulo na apostila", max_length=50, blank=True)
+
+    class Meta:
+        constraints = [
+            # choices só vale nos formulários; o CHECK impede outro valor gravado por fora.
+            models.CheckConstraint(condition=Q(tipo__in=["apostila", "opcional"]), name="tema_tipo_valido"),
+            models.UniqueConstraint(fields=["nome"], name="tema_nome_unico", violation_error_message=MENSAGEM_TEMA_REPETIDO),
+        ]
+
+    def __str__(self):
+        return self.nome
