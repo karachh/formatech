@@ -3,19 +3,30 @@ from datetime import date
 from django.test import TestCase
 from django.urls import reverse
 
+from acesso.models import Usuario
 from cadastros.models import Ciclo
 
 URL = reverse("cadastros:ciclos")
 
 
-class TelaCiclosTests(TestCase):
+class ComoCoordenador:
+    
+    def setUp(self):
+        super().setUp()
+        coordenador = Usuario.objects.create_user(
+            username="coord", password="x", perfil=Usuario.Perfil.COORDENADOR
+        )
+        self.client.force_login(coordenador)
+
+
+class TelaCiclosTests(ComoCoordenador, TestCase):  
     def postar(self, nome="Perseverança 2027", inicio="2027-02-01", fim="2027-12-15"):
         return self.client.post(URL, {"nome": nome, "inicio": inicio, "fim": fim}, follow=True)
 
     def test_lista_vazia(self):
         self.assertContains(self.client.get(URL), "Nenhum ciclo cadastrado.")
 
-    # Critério 1 da US002: o ciclo cadastrado aparece na lista
+
 
     def test_cadastrar_mostra_o_ciclo_na_lista(self):
         resposta = self.postar()
@@ -24,7 +35,7 @@ class TelaCiclosTests(TestCase):
         self.assertContains(resposta, "<td>Perseverança 2027</td><td>01/02/2027</td><td>15/12/2027</td>", html=True)
         self.assertContains(resposta, "<td>Aberto</td>", html=True)
 
-    # Critério 2: ciclo sobreposto mostra erro e não salva
+    
 
     def test_ciclo_sobreposto_mostra_erro_e_nao_salva(self):
         Ciclo.objects.create(nome="2027", inicio=date(2027, 1, 1), fim=date(2027, 12, 31))
@@ -43,12 +54,13 @@ class TelaCiclosTests(TestCase):
         self.assertFalse(Ciclo.objects.exists())
 
 
-class TelaEncerrarCicloTests(TestCase):
+class TelaEncerrarCicloTests(ComoCoordenador, TestCase):  
     def setUp(self):
+        super().setUp()  
         self.ciclo = Ciclo.objects.create(nome="2027", inicio=date(2027, 2, 1), fim=date(2027, 12, 15))
         self.url = reverse("cadastros:encerrar_ciclo", args=[self.ciclo.pk])
 
-    # Critério 3 da US002: um ciclo pode ser encerrado
+    
 
     def test_ciclo_aberto_tem_botao_encerrar(self):
         self.assertContains(self.client.get(URL), f'action="{self.url}"')
@@ -76,8 +88,9 @@ class TelaEncerrarCicloTests(TestCase):
         self.assertEqual(self.client.post(url).status_code, 404)
 
 
-class TelaEditarCicloTests(TestCase):
+class TelaEditarCicloTests(ComoCoordenador, TestCase): 
     def setUp(self):
+        super().setUp()  
         self.ciclo = Ciclo.objects.create(nome="2027", inicio=date(2027, 2, 1), fim=date(2027, 12, 15))
         self.url = reverse("cadastros:editar_ciclo", args=[self.ciclo.pk])
 

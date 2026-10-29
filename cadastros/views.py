@@ -4,11 +4,14 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from acesso.decorators import coordenador_required
+
 from . import services
 from .forms import CicloForm
 from .models import Ciclo
 
 
+@coordenador_required
 def ciclos(request):
     form = CicloForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -18,11 +21,12 @@ def ciclos(request):
             form.add_error(None, erro)
         else:
             messages.success(request, f"Ciclo “{ciclo}” cadastrado.")
-            # Redireciona após gravar: recarregar a página não reenvia o formulário.
+        
             return redirect("cadastros:ciclos")
     return render(request, "cadastros/ciclos.html", {"form": form, "ciclos": services.listar_ciclos()})
 
 
+@coordenador_required
 def editar_ciclo(request, ciclo_id):
     try:
         ciclo = services.buscar_ciclo(ciclo_id)
@@ -44,7 +48,7 @@ def editar_ciclo(request, ciclo_id):
     return render(request, "cadastros/editar_ciclo.html", {"form": form, "ciclo": ciclo})
 
 
-# Só POST: um GET (link, pré-carregamento do navegador) não pode alterar dados.
+@coordenador_required
 @require_POST
 def encerrar_ciclo(request, ciclo_id):
     try:
