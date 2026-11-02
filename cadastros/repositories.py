@@ -1,6 +1,6 @@
 from django.db import IntegrityError, transaction
 
-from .models import Ciclo, Tema
+from .models import Ciclo, Formador, Perseverante, Tema
 
 
 class PeriodoOcupado(Exception):
@@ -57,3 +57,49 @@ def salvar_tema(tema):
             raise NomeDeTemaEmUso from erro
         raise
     return tema
+
+
+def listar_formadores():
+    return list(Formador.objects.order_by("nome"))
+
+
+def buscar_formador(formador_id):
+    """Levanta Formador.DoesNotExist se o id não existir."""
+    return Formador.objects.get(pk=formador_id)
+
+
+def salvar_formador(formador):
+    formador.save()
+    return formador
+
+
+def inativar_formador(formador):
+    formador.ativo = False
+    formador.save()
+    return formador
+
+
+def listar_perseverantes(ciclo_id):
+    return list(Perseverante.objects.filter(ciclo_id=ciclo_id).order_by("nome"))
+
+
+def listar_perseverantes_ativos(ciclo_id):
+    return list(
+        Perseverante.objects.filter(ciclo_id=ciclo_id, ativo=True).order_by("nome")
+    )
+
+
+def buscar_perseverante(perseverante_id):
+    """Levanta Perseverante.DoesNotExist se o id não existir."""
+    return Perseverante.objects.get(pk=perseverante_id)
+
+
+def salvar_perseverante(perseverante):
+    perseverante.save()
+    return perseverante
+
+
+def inativar_perseverante(perseverante):
+    perseverante.ativo = False
+    perseverante.save()
+    return perseverante

@@ -150,6 +150,44 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
   encerrar", e nenhuma tarefa cobria a edição.
 
 
+## US003 — Cadastrar formadores
+
+**Responsável:** não registrado · **Sprint:** não registrada · **RF:** RF003 · **Situação:** implementação concluída; execução dos testes pendente de validação do ambiente
+
+### O que faz
+Como coordenador, quero cadastrar, editar e inativar formadores, para manter a lista
+de pessoas que podem ser escaladas nas formações. A lista apresenta formadores ativos
+e inativos com a situação identificada.
+
+### Como foi feita
+- `Formador` herda de `RegistroBase`, tem nome, início de serviço obrigatório,
+  indicação de capacitação e estado ativo (T003.1). Novos registros começam ativos.
+- `Usuario` e `Formador` continuam sem relacionamento. A contagem de formações e a
+  lista de temas não são armazenadas, conforme RN006. A edição não reativa registros.
+- O repositório concentra listar, buscar, salvar e inativar; o serviço valida os dados
+  sem receber `request` nem acessar diretamente o ORM.
+- As telas e operações são restritas a coordenadores. A inativação é lógica, aceita
+  somente POST e mantém o registro visível na listagem com estado "Inativo".
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T003.1 Criar o model Formador + migration | Feita | `cadastros/models.py`, `cadastros/migrations/0004_formador.py` |
+| T003.2 Criar repositório e serviço de formadores (listar, salvar, inativar) | Feita | `cadastros/repositories.py`, `cadastros/services.py` |
+| T003.3 Criar telas de lista, cadastro e edição de formador | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/formadores.html`, `cadastros/templates/cadastros/editar_formador.html` |
+| T003.4 Implementar inativação lógica | Feita | `cadastros/services.py`, `cadastros/repositories.py`, `cadastros/views.py`, `cadastros/templates/cadastros/formadores.html` |
+| T003.5 Testes do cadastro e da inativação | Implementados (21 testes); execução pendente de confirmação do ambiente PostgreSQL | `cadastros/tests/test_formador.py` |
+
+### Mudanças em relação ao plano
+- A relação entre `Usuario` e `Formador` permaneceu fora do escopo, pois não foi
+  confirmada pela equipe.
+- A listagem inclui ambos os estados; a ação de inativar aparece apenas para registros
+  ativos. Não há ação de reativação.
+- O código da aplicação e os testes foram escritos, mas a execução específica parou
+  durante a criação do banco de teste, sem resultado final confirmado. Nenhuma
+  migration foi aplicada ao banco de desenvolvimento.
+
+
 
 ---
 
@@ -203,3 +241,35 @@ na lista de temas e fica disponível para escolher na montagem do cronograma.
   de temas que ele vai consumir.
 - A edição de tema (T005.3) não altera o `HISTORIAS.md` da US001: os links de menu
   continuam provisórios, exceto "Temas".
+
+
+## US004 — Cadastrar perseverantes do ciclo
+
+**RF:** RF004 · **Situação:** implementação realizada; exclusão a pedido (NFC002) e validação com banco pendentes
+
+### O que faz
+Permite ao coordenador cadastrar, editar, consultar por ciclo e inativar
+perseverantes. A consulta pode mostrar ativos e inativos; a operação de inativação
+preserva o registro.
+
+### Como foi feita
+- `Perseverante` herda de `RegistroBase` e contém somente nome, ciclo obrigatório e
+  estado ativo, iniciado como verdadeiro. A FK usa `PROTECT`, evitando apagar um ciclo
+  que tenha perseverantes associados.
+- O repositório oferece listagem por ciclo e uma consulta separada que retorna apenas
+  ativos, para eventual consumo futuro pela grade de presença. A grade não existe e
+  não foi implementada nem declarada como integrada.
+- Cadastro e edição resolvem o ciclo no serviço; somente os repositórios consultam o
+  ORM. As operações de tela são protegidas para coordenadores; inativação é POST.
+- Não há exclusão definitiva nem anonimização: o tratamento pedido pela NFC002 ainda
+  depende de regra oficial. Não foram adicionados campos de dados pessoais além do
+  nome, nem campos de contagem ou presença.
+
+### Validação e pendências
+- Os seis testes isolados de serviço passaram. A suíte completa encontrou 20 testes,
+  mas a execução não avançou da criação do banco de teste; os testes de persistência e
+  tela permanecem sem resultado confirmado neste ambiente.
+- `manage.py check` foi tentado, mas o terminal não retornou saída conclusiva.
+- Nenhuma migration foi aplicada ao banco de desenvolvimento.
+- A decisão de exclusão/anonimização em conformidade com NFC002 continua pendente de
+  esclarecimento pela equipe.

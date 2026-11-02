@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Perseverantes · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Perseverantes</h1>
+
+<h2>Cadastrar perseverante</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+</form>
+
+<h2>Consultar por ciclo</h2>
+<form method="get">
+  {{ filtro.as_p }}
+  <button type="submit">Filtrar</button>
+</form>
+
+{% if ciclo %}
+  <h2>Perseverantes de {{ ciclo.nome }}</h2>
+  {% if perseverantes %}
+    <table>
+      <thead><tr><th>Nome</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        {% for participante in perseverantes %}
+          <tr>
+            <td>{{ participante.nome }}</td>
+            <td>{% if participante.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+            <td>
+              <a href="{% url 'cadastros:editar_perseverante' participante.id %}">Editar</a>
+              {% if participante.ativo %}
+                <form method="post" action="{% url 'cadastros:inativar_perseverante' participante.id %}">
+                  {% csrf_token %}
+                  <button type="submit">Inativar</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Nenhum perseverante cadastrado neste ciclo.</p>
+  {% endif %}
+{% else %}
+  <p>Selecione um ciclo para consultar os perseverantes.</p>
+{% endif %}
+{% endblock %}
