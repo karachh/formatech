@@ -20,6 +20,11 @@ def buscar_ciclo(ciclo_id):
     return repositories.buscar_ciclo(ciclo_id)
 
 
+def buscar_ciclo_da_data(data):
+    """Ciclo que contém a data (RN002), ou None."""
+    return repositories.buscar_ciclo_da_data(data)
+
+
 def abrir_ciclo(nome, inicio, fim):
     """Cria um ciclo (RF002, CA001). Levanta ValidationError com a mensagem para o usuário."""
     return _validar_e_salvar(Ciclo(nome=(nome or "").strip(), inicio=inicio, fim=fim))
@@ -96,6 +101,10 @@ def _validar_e_salvar_tema(tema):
 
 def listar_formadores():
     return repositories.listar_formadores()
+
+
+def listar_formadores_ativos():
+    return repositories.listar_formadores_ativos()
 
 
 def buscar_formador(formador_id):

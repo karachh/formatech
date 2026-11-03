@@ -15,6 +15,9 @@ def buscar_ciclo(ciclo_id):
     """Levanta Ciclo.DoesNotExist se o id não existir."""
     return Ciclo.objects.get(pk=ciclo_id)
 
+def buscar_ciclo_da_data(data):
+    """O ciclo cujo período contém a data, ou None. Ciclos não se sobrepõem (RN002)."""
+    return Ciclo.objects.filter(inicio__lte=data, fim__gte=data).first()
 
 def salvar_ciclo(ciclo):
     try:
@@ -67,6 +70,8 @@ def buscar_formador(formador_id):
     """Levanta Formador.DoesNotExist se o id não existir."""
     return Formador.objects.get(pk=formador_id)
 
+def listar_formadores_ativos():
+    return list(Formador.objects.filter(ativo=True).order_by("nome"))
 
 def salvar_formador(formador):
     formador.save()
