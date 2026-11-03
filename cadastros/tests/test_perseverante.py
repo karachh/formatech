@@ -86,6 +86,11 @@ class RepositorioPerseveranteTests(TestCase):
         self.assertFalse(self.ativo.ativo)
         self.assertTrue(Perseverante.objects.filter(pk=self.ativo.pk).exists())
 
+    def test_exclui_apagando_o_registro(self):
+        repositories.excluir_perseverante(self.ativo)
+        self.assertFalse(Perseverante.objects.filter(nome="Ana").exists())
+        self.assertTrue(Ciclo.objects.filter(pk=self.ciclo_a.pk).exists())
+
 
 class ServicoPerseveranteTests(SimpleTestCase):
     @mock.patch(
@@ -184,6 +189,30 @@ class ServicoPerseveranteTests(SimpleTestCase):
 
         inativar.assert_not_called()
 
+    @mock.patch("cadastros.services.repositories.excluir_perseverante")
+    @mock.patch("cadastros.services.repositories.buscar_perseverante")
+    def test_exclui_ativo_ou_inativo(self, buscar, excluir):
+        for ativo in (True, False):
+            with self.subTest(ativo=ativo):
+                excluir.reset_mock()
+                participante = Perseverante(pk=3, nome="Ana", ciclo_id=1, ativo=ativo)
+                buscar.return_value = participante
+
+                resultado = services.excluir_perseverante(3)
+
+                excluir.assert_called_once_with(participante)
+                self.assertEqual(resultado.ciclo_id, 1)
+
+    @mock.patch("cadastros.services.repositories.excluir_perseverante")
+    @mock.patch("cadastros.services.repositories.buscar_perseverante")
+    def test_excluir_inexistente_propaga_does_not_exist(self, buscar, excluir):
+        buscar.side_effect = Perseverante.DoesNotExist
+
+        with self.assertRaises(Perseverante.DoesNotExist):
+            services.excluir_perseverante(999)
+
+        excluir.assert_not_called()
+
 
 class TelaPerseverantesTests(ComoCoordenador, TestCase):
     def setUp(self):
@@ -263,6 +292,28 @@ class TelaPerseverantesTests(ComoCoordenador, TestCase):
         participante.refresh_from_db()
         self.assertTrue(participante.ativo)
 
+    def test_exclusao_a_pedido_apaga_o_registro(self):
+        participante = Perseverante.objects.create(nome="Ana Souza", ciclo=self.ciclo)
+        url = reverse("cadastros:excluir_perseverante", args=[participante.pk])
+
+        resposta = self.client.post(url, follow=True)
+
+        self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
+        self.assertContains(resposta, "Perseverante excluído a pedido.")
+        self.assertNotContains(resposta, "Ana Souza")
+        self.assertFalse(Perseverante.objects.filter(pk=participante.pk).exists())
+
+    def test_get_nao_exclui(self):
+        participante = Perseverante.objects.create(nome="Ana", ciclo=self.ciclo)
+        url = reverse("cadastros:excluir_perseverante", args=[participante.pk])
+
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertTrue(Perseverante.objects.filter(pk=participante.pk).exists())
+
+    def test_excluir_inexistente_da_404(self):
+        url = reverse("cadastros:excluir_perseverante", args=[999_999])
+        self.assertEqual(self.client.post(url).status_code, 404)
+
     def test_formador_nao_pode_operar_perseverantes(self):
         usuario = Usuario.objects.create_user(
             username="form",
@@ -282,8 +333,19 @@ class TelaPerseverantesTests(ComoCoordenador, TestCase):
             self.client.post(reverse("cadastros:inativar_perseverante", args=[participante.pk])).status_code,
             403,
         )
+        self.assertEqual(
+            self.client.post(reverse("cadastros:excluir_perseverante", args=[participante.pk])).status_code,
+            403,
+        )
+        self.assertTrue(Perseverante.objects.filter(pk=participante.pk).exists())
 
     def test_anonimo_e_redirecionado(self):
         self.client.logout()
+        participante = Perseverante.objects.create(nome="Ana", ciclo=self.ciclo)
         self.assertEqual(self.client.get(URL).status_code, 302)
         self.assertEqual(self.client.post(URL, {}).status_code, 302)
+        self.assertEqual(
+            self.client.post(reverse("cadastros:excluir_perseverante", args=[participante.pk])).status_code,
+            302,
+        )
+        self.assertTrue(Perseverante.objects.filter(pk=participante.pk).exists())

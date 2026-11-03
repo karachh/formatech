@@ -164,6 +164,17 @@ def inativar_perseverante(perseverante_id):
     return repositories.inativar_perseverante(perseverante)
 
 
+def excluir_perseverante(perseverante_id):
+    """Exclusão a pedido do titular (NFC002): apaga o registro de verdade.
+
+    Diferente da inativação, que preserva o registro. Pela ressalva da NFC002,
+    a exclusão remove também as presenças do perseverante.
+    """
+    perseverante = repositories.buscar_perseverante(perseverante_id)
+    repositories.excluir_perseverante(perseverante)
+    return perseverante
+
+
 def _buscar_ciclo_perseverante(ciclo_id):
     if not ciclo_id:
         raise ValidationError({"ciclo_id": "Selecione um ciclo."})

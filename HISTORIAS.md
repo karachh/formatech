@@ -260,12 +260,12 @@ na lista de temas e fica disponível para escolher na montagem do cronograma.
 
 ## US004 — Cadastrar perseverantes do ciclo
 
-**Responsável:** Bruno · **Sprint:** 1 · **RF:** RF004 · **Situação:** concluída; mesclada na `main` (PR #6, junto com a US003); os 20 testes passam desde a correção de 03/11/2026; exclusão a pedido (NFC002) pendente
+**Responsável:** Bruno · **Sprint:** 1 · **RF:** RF004 · **Situação:** concluída; mesclada na `main` (PR #6, junto com a US003); exclusão a pedido (T004.4) feita em 03/11/2026; os 26 testes passam
 
 ### O que faz
-Permite ao coordenador cadastrar, editar, consultar por ciclo e inativar
-perseverantes. A consulta pode mostrar ativos e inativos; a operação de inativação
-preserva o registro.
+Permite ao coordenador cadastrar, editar, consultar por ciclo, inativar e excluir a
+pedido os perseverantes. A consulta pode mostrar ativos e inativos; a inativação
+preserva o registro, e a exclusão a pedido o apaga.
 
 ### Como foi feita
 - `Perseverante` herda de `RegistroBase` e contém somente nome, ciclo obrigatório e
@@ -276,14 +276,37 @@ preserva o registro.
   não foi implementada nem declarada como integrada.
 - Cadastro e edição resolvem o ciclo no serviço; somente os repositórios consultam o
   ORM. As operações de tela são protegidas para coordenadores; inativação é POST.
-- Não há exclusão definitiva nem anonimização: o tratamento pedido pela NFC002 ainda
-  depende de regra oficial. Não foram adicionados campos de dados pessoais além do
-  nome, nem campos de contagem ou presença.
+- Exclusão a pedido (NFC002): o botão "Excluir a pedido" faz um POST para
+  `perseverantes/<id>/excluir/`. O serviço `excluir_perseverante` busca o registro e
+  pede ao repositório que o apague (`delete()`). Funciona para ativos e inativos.
+  A tela avisa que a ação é definitiva, e a mensagem de sucesso não repete o nome.
+- Não foram adicionados campos de dados pessoais além do nome, nem campos de contagem
+  ou presença (NFC001, RN006).
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T004.1 Criar o model Perseverante (nome, ciclo, ativo) + migration | Feita | `cadastros/models.py`, `cadastros/migrations/0005_perseverante.py` |
+| T004.2 Criar repositório e serviço de perseverantes | Feita | `cadastros/repositories.py`, `cadastros/services.py` |
+| T004.3 Criar telas de lista (filtrada por ciclo), cadastro e edição | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/perseverantes.html`, `cadastros/templates/cadastros/editar_perseverante.html` |
+| T004.4 Implementar inativação e exclusão a pedido (LGPD — NFC002) | Feita (exclusão em 03/11/2026) | `cadastros/repositories.py`, `cadastros/services.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/perseverantes.html` |
+| T004.5 Testes do cadastro de perseverantes | Feita (26 testes) | `cadastros/tests/test_perseverante.py` |
+
+### Decisões
+- **Exclusão a pedido apaga o registro, não anonimiza.** É o que a NFC002 da
+  especificação determina, com a ressalva registrada de que a exclusão remove também
+  as presenças. A anonimização foi considerada e descartada: numa turma de cerca de
+  20 pessoas, o registro continuaria identificável pela ordem de cadastro e pelo
+  histórico de presença.
+- **Para o módulo Presença:** a FK de Presença para Perseverante deve usar
+  `on_delete=CASCADE`, para que a exclusão a pedido apague as presenças, como manda a
+  NFC002. Com `PROTECT`, a exclusão de quem já tem presença seria bloqueada.
 
 ### Validação
 - Em 03/11/2026, com o PostgreSQL no ar, `manage.py check` não acusou problemas e os
-  20 testes de `cadastros/tests/test_perseverante.py` passaram (suíte completa: 117).
-- A migração `0005_perseverante` está aplicada no banco de desenvolvimento.
+  26 testes de `cadastros/tests/test_perseverante.py` passaram (suíte completa: 123).
+- As migrações `0004_formador` e `0005_perseverante` estão aplicadas no banco de
+  desenvolvimento. A exclusão a pedido não exigiu migração.
 
 ### Correção pós-merge (branch `fix-us003-us004-testes`, 03/11/2026)
 - As mensagens passaram a usar aspas curvas, pela mesma causa descrita na US003.
@@ -294,5 +317,6 @@ preserva o registro.
   mensagem na página final.
 
 ### Pendências
-- A decisão de exclusão/anonimização em conformidade com NFC002 continua pendente de
-  esclarecimento pela equipe.
+- O critério "imediatamente disponível na grade de presença" só pode ser verificado
+  quando o módulo Presença existir. A consulta que a grade vai usar já está pronta
+  (`listar_perseverantes_ativos`).

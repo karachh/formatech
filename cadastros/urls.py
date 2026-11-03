@@ -16,4 +16,5 @@ urlpatterns = [
     path('perseverantes/', views.perseverantes, name='perseverantes'),
     path('perseverantes/<int:perseverante_id>/editar/', views.editar_perseverante, name='editar_perseverante'),
     path('perseverantes/<int:perseverante_id>/inativar/', views.inativar_perseverante, name='inativar_perseverante'),
+    path('perseverantes/<int:perseverante_id>/excluir/', views.excluir_perseverante, name='excluir_perseverante'),
 ]
