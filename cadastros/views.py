@@ -234,3 +234,14 @@ def inativar_perseverante(request, perseverante_id):
     else:
         messages.success(request, f"Perseverante “{participante}” inativado.")
     return redirect(f"{reverse('cadastros:perseverantes')}?ciclo={participante.ciclo_id}")
+
+
+@coordenador_required
+@require_POST
+def excluir_perseverante(request, perseverante_id):
+    try:
+        participante = services.excluir_perseverante(perseverante_id)
+    except Perseverante.DoesNotExist:
+        raise Http404("Perseverante não encontrado.")
+    messages.success(request, "Perseverante excluído a pedido.")
+    return redirect(f"{reverse('cadastros:perseverantes')}?ciclo={participante.ciclo_id}")

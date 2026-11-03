@@ -36,6 +36,11 @@
                   <button type="submit">Inativar</button>
                 </form>
               {% endif %}
+              <form method="post" action="{% url 'cadastros:excluir_perseverante' participante.id %}">
+                {% csrf_token %}
+                <button type="submit">Excluir a pedido</button>
+                <small>Apaga o perseverante e as presenças dele (LGPD). Não pode ser desfeito.</small>
+              </form>
             </td>
           </tr>
         {% endfor %}

@@ -103,3 +103,7 @@ def inativar_perseverante(perseverante):
     perseverante.ativo = False
     perseverante.save()
     return perseverante
+
+
+def excluir_perseverante(perseverante):
+    perseverante.delete()
