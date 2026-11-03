@@ -131,7 +131,7 @@ class TelaFormadoresTests(ComoCoordenador, TestCase):
         resposta = self.postar()
 
         self.assertRedirects(resposta, URL)
-        self.assertContains(resposta, 'Formador "Ana" cadastrado.')
+        self.assertContains(resposta, "Formador “Ana” cadastrado.")
         self.assertContains(resposta, "Ativo")
         formador = Formador.objects.get(nome="Ana")
         self.assertTrue(formador.ativo)
@@ -199,7 +199,7 @@ class TelaFormadoresTests(ComoCoordenador, TestCase):
         resposta = self.client.post(url, follow=True)
 
         self.assertRedirects(resposta, URL)
-        self.assertContains(resposta, 'Formador "Ana" inativado.')
+        self.assertContains(resposta, "Formador “Ana” inativado.")
         formador.refresh_from_db()
         self.assertFalse(formador.ativo)
         self.assertTrue(Formador.objects.filter(pk=formador.pk).exists())

@@ -107,7 +107,7 @@ def formadores(request):
         except ValidationError as erro:
             form.add_error(None, erro)
         else:
-            messages.success(request, f'Formador "{formador}" cadastrado.')
+            messages.success(request, f"Formador “{formador}” cadastrado.")
             return redirect("cadastros:formadores")
     return render(
         request,
@@ -136,7 +136,7 @@ def editar_formador(request, formador_id):
         except ValidationError as erro:
             form.add_error(None, erro)
         else:
-            messages.success(request, f'Formador "{formador}" alterado.')
+            messages.success(request, f"Formador “{formador}” alterado.")
             return redirect("cadastros:formadores")
     return render(
         request,
@@ -155,7 +155,7 @@ def inativar_formador(request, formador_id):
     except ValidationError as erro:
         messages.error(request, erro.message)
     else:
-        messages.success(request, f'Formador "{formador}" inativado.')
+        messages.success(request, f"Formador “{formador}” inativado.")
     return redirect("cadastros:formadores")
 
 
@@ -180,7 +180,7 @@ def perseverantes(request):
         except ValidationError as erro:
             form.add_error(None, erro)
         else:
-            messages.success(request, f'Perseverante "{participante}" cadastrado.')
+            messages.success(request, f"Perseverante “{participante}” cadastrado.")
             return redirect(f"{reverse('cadastros:perseverantes')}?ciclo={participante.ciclo_id}")
     return render(
         request,
@@ -213,7 +213,7 @@ def editar_perseverante(request, perseverante_id):
         except ValidationError as erro:
             form.add_error(None, erro)
         else:
-            messages.success(request, f'Perseverante "{participante}" alterado.')
+            messages.success(request, f"Perseverante “{participante}” alterado.")
             return redirect(f"{reverse('cadastros:perseverantes')}?ciclo={participante.ciclo_id}")
     return render(
         request,
@@ -232,5 +232,5 @@ def inativar_perseverante(request, perseverante_id):
     except ValidationError as erro:
         messages.error(request, erro.message)
     else:
-        messages.success(request, f'Perseverante "{participante}" inativado.')
+        messages.success(request, f"Perseverante “{participante}” inativado.")
     return redirect(f"{reverse('cadastros:perseverantes')}?ciclo={participante.ciclo_id}")
