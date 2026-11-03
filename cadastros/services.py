@@ -125,7 +125,7 @@ def editar_formador(formador_id, nome, inicio_servico, capacitado):
 def inativar_formador(formador_id):
     formador = repositories.buscar_formador(formador_id)
     if not formador.ativo:
-        raise ValidationError(f'O formador "{formador}" já está inativo.')
+        raise ValidationError(f"O formador “{formador}” já está inativo.")
     return repositories.inativar_formador(formador)
 
 
@@ -160,7 +160,7 @@ def editar_perseverante(perseverante_id, nome, ciclo_id):
 def inativar_perseverante(perseverante_id):
     perseverante = repositories.buscar_perseverante(perseverante_id)
     if not perseverante.ativo:
-        raise ValidationError(f'O perseverante "{perseverante}" já está inativo.')
+        raise ValidationError(f"O perseverante “{perseverante}” já está inativo.")
     return repositories.inativar_perseverante(perseverante)
 
 

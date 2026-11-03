@@ -152,7 +152,7 @@ um ciclo com datas sobrepostas a outro mostra erro e não é salvo; um ciclo pod
 
 ## US003 — Cadastrar formadores
 
-**Responsável:** não registrado · **Sprint:** não registrada · **RF:** RF003 · **Situação:** implementação concluída; execução dos testes pendente de validação do ambiente
+**Responsável:** Bruno · **Sprint:** 1 · **RF:** RF003 · **Situação:** concluída; mesclada na `main` (PR #6, junto com a US004); os 21 testes passam desde a correção de 03/11/2026
 
 ### O que faz
 Como coordenador, quero cadastrar, editar e inativar formadores, para manter a lista
@@ -176,16 +176,31 @@ e inativos com a situação identificada.
 | T003.2 Criar repositório e serviço de formadores (listar, salvar, inativar) | Feita | `cadastros/repositories.py`, `cadastros/services.py` |
 | T003.3 Criar telas de lista, cadastro e edição de formador | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/formadores.html`, `cadastros/templates/cadastros/editar_formador.html` |
 | T003.4 Implementar inativação lógica | Feita | `cadastros/services.py`, `cadastros/repositories.py`, `cadastros/views.py`, `cadastros/templates/cadastros/formadores.html` |
-| T003.5 Testes do cadastro e da inativação | Implementados (21 testes); execução pendente de confirmação do ambiente PostgreSQL | `cadastros/tests/test_formador.py` |
+| T003.5 Testes do cadastro e da inativação | Feita (21 testes, todos passando em 03/11/2026) | `cadastros/tests/test_formador.py` |
 
 ### Mudanças em relação ao plano
 - A relação entre `Usuario` e `Formador` permaneceu fora do escopo, pois não foi
   confirmada pela equipe.
 - A listagem inclui ambos os estados; a ação de inativar aparece apenas para registros
   ativos. Não há ação de reativação.
-- O código da aplicação e os testes foram escritos, mas a execução específica parou
-  durante a criação do banco de teste, sem resultado final confirmado. Nenhuma
-  migration foi aplicada ao banco de desenvolvimento.
+- A US003 e a US004 foram entregues juntas, num único commit e num único PR (#6),
+  em vez de um commit por tarefa e uma branch por história, como pede o AGENTS.md.
+
+### Correção pós-merge (branch `fix-us003-us004-testes`, 03/11/2026)
+- O PR #6 foi mesclado sem os testes rodados (o banco de teste não subia) e sem
+  revisão de um colega. Na primeira execução completa, falharam
+  `test_cadastrar_mostra_formador_ativo_na_lista` e
+  `test_inativar_por_post_preserva_registro`.
+- Causa: as mensagens usavam aspas retas (`"Ana"`), que o template escapa para
+  `&quot;Ana&quot;`, e o `assertContains` compara o texto cru. A tela funcionava.
+- Correção: as mensagens de formador e de perseverante (views e serviços) passaram
+  a usar aspas curvas (`“Ana”`), como as telas de ciclo e de tema, que não são
+  escapadas. Os testes foram ajustados ao novo texto.
+
+### Pendências
+- Não existe `listar_formadores_ativos()`. A escolha de formador no cronograma
+  (US006) e na escalação (US007) não deve oferecer formadores inativos. A função
+  entra junto com a primeira história que precisar dela.
 
 
 
@@ -245,7 +260,7 @@ na lista de temas e fica disponível para escolher na montagem do cronograma.
 
 ## US004 — Cadastrar perseverantes do ciclo
 
-**RF:** RF004 · **Situação:** implementação realizada; exclusão a pedido (NFC002) e validação com banco pendentes
+**Responsável:** Bruno · **Sprint:** 1 · **RF:** RF004 · **Situação:** concluída; mesclada na `main` (PR #6, junto com a US003); os 20 testes passam desde a correção de 03/11/2026; exclusão a pedido (NFC002) pendente
 
 ### O que faz
 Permite ao coordenador cadastrar, editar, consultar por ciclo e inativar
@@ -265,11 +280,19 @@ preserva o registro.
   depende de regra oficial. Não foram adicionados campos de dados pessoais além do
   nome, nem campos de contagem ou presença.
 
-### Validação e pendências
-- Os seis testes isolados de serviço passaram. A suíte completa encontrou 20 testes,
-  mas a execução não avançou da criação do banco de teste; os testes de persistência e
-  tela permanecem sem resultado confirmado neste ambiente.
-- `manage.py check` foi tentado, mas o terminal não retornou saída conclusiva.
-- Nenhuma migration foi aplicada ao banco de desenvolvimento.
+### Validação
+- Em 03/11/2026, com o PostgreSQL no ar, `manage.py check` não acusou problemas e os
+  20 testes de `cadastros/tests/test_perseverante.py` passaram (suíte completa: 117).
+- A migração `0005_perseverante` está aplicada no banco de desenvolvimento.
+
+### Correção pós-merge (branch `fix-us003-us004-testes`, 03/11/2026)
+- As mensagens passaram a usar aspas curvas, pela mesma causa descrita na US003.
+- `test_anonimo_e_redirecionado` falhava (200 em vez de 302): o `postar()` usa
+  `follow=True` e seguia o redirecionamento até a página de login. O teste passou a
+  fazer o POST direto, sem `follow`, como o teste equivalente de formador. O
+  `postar()` continua com `follow=True`, porque os testes de cadastro precisam ler a
+  mensagem na página final.
+
+### Pendências
 - A decisão de exclusão/anonimização em conformidade com NFC002 continua pendente de
   esclarecimento pela equipe.

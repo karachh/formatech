@@ -210,7 +210,7 @@ class TelaPerseverantesTests(ComoCoordenador, TestCase):
         resposta = self.postar()
 
         self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
-        self.assertContains(resposta, 'Perseverante "Ana" cadastrado.')
+        self.assertContains(resposta, "Perseverante “Ana” cadastrado.")
         participante = Perseverante.objects.get(nome="Ana")
         self.assertEqual(participante.ciclo, self.ciclo)
         self.assertTrue(participante.ativo)
@@ -250,7 +250,7 @@ class TelaPerseverantesTests(ComoCoordenador, TestCase):
         resposta = self.client.post(url, follow=True)
 
         self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
-        self.assertContains(resposta, 'Perseverante "Ana" inativado.')
+        self.assertContains(resposta, "Perseverante “Ana” inativado.")
         participante.refresh_from_db()
         self.assertFalse(participante.ativo)
         self.assertTrue(Perseverante.objects.filter(pk=participante.pk).exists())
@@ -286,4 +286,4 @@ class TelaPerseverantesTests(ComoCoordenador, TestCase):
     def test_anonimo_e_redirecionado(self):
         self.client.logout()
         self.assertEqual(self.client.get(URL).status_code, 302)
-        self.assertEqual(self.postar().status_code, 302)
+        self.assertEqual(self.client.post(URL, {}).status_code, 302)

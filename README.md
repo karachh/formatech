@@ -120,13 +120,15 @@ Depois de um `git pull`, rode também `pip install -r requirements.txt` e `pytho
 Para desligar o banco: `docker compose down` (os dados são mantidos).
 
 ## SQL's
- - SQL's de exemplo, utilizados no seminario da etapa 2, estao em .banco (schemal.sql, demo.sql, dados.sql)
+- SQLs para apresentação do seminário no diretório formatech/banco/
+
 
 ## Links do projeto
 
 - Quadro de acompanhamento (Trello): https://trello.com/b/8z6w9WBW/formatech
 - Documento de especificação e arquitetura (Etapa 1): https://docs.google.com/document/d/1J410W6i5ZZJUHrE2-oC42c0n0oSF-nLuWoZoC-7WKz4/edit?tab=t.0
 - Backlog do produto e da sprint: 
+- Especificação da parte 3 do trabalho: https://docs.google.com/document/d/1uLPKlWALsFlXf3suvxOkW_txO4EY8Na5xnldJT_RJbI/edit?usp=sharing
 
 
 Projeto acadêmico, desenvolvido para a disciplina de Construção de Software (UEM).
