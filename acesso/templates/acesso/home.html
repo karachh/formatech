@@ -8,7 +8,11 @@
 
 <nav>
   <ul>
-    <li><a href="#">Cronograma</a></li>
+     {% if user.perfil == "coordenador" %}
+      <li><a href="{% url 'cronograma:cronograma' %}">Cronograma</a></li>
+    {% else %}
+      <li><a href="#">Cronograma</a></li>
+    {% endif %}
     {% if user.perfil == "coordenador" %}
       <li><a href="{% url 'cadastros:ciclos' %}">Ciclos</a></li>
       <li><a href="{% url 'cadastros:perseverantes' %}">Perseverantes</a></li>

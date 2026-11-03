@@ -198,9 +198,9 @@ e inativos com a situação identificada.
   escapadas. Os testes foram ajustados ao novo texto.
 
 ### Pendências
-- Não existe `listar_formadores_ativos()`. A escolha de formador no cronograma
-  (US006) e na escalação (US007) não deve oferecer formadores inativos. A função
-  entra junto com a primeira história que precisar dela.
+- ~~Não existe `listar_formadores_ativos()`.~~ Resolvida na US006: a função existe
+  em `cadastros/repositories.py` e `cadastros/services.py`, e a escolha de formador do
+  cronograma só oferece ativos. A escalação (US007) deve usar a mesma função.
 
 
 
@@ -208,7 +208,7 @@ e inativos com a situação identificada.
 
 ## US005 — Cadastrar temas da apostila
 
-**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF005 · **Situação:** em andamento
+**Responsável:** Murilo · **Sprint:** 1 · **RF:** RF005 · **Situação:** concluída; mesclada na `main` (PR #5); os 14 testes passam (revisão de 03/11/2026)
 
 ### O que faz
 Como coordenador, quero cadastrar temas classificando cada um como obrigatório
@@ -240,17 +240,30 @@ na lista de temas e fica disponível para escolher na montagem do cronograma.
 ### Tarefas
 | Tarefa | Situação | Onde |
 |---|---|---|
-| T005.1 Criar o model Tema (nome, tipo apostila/opcional, rótulo da apostila) + migration | Feita | `cadastros/models.py`, `cadastros/admin.py`, `cadastros/migrations/<<nome da migração>>` |
+| T005.1 Criar o model Tema (nome, tipo apostila/opcional, rótulo da apostila) + migration | Feita | `cadastros/models.py`, `cadastros/admin.py`, `cadastros/migrations/0003_tema.py` |
 | T005.2 Criar repositório e serviço de temas | Feita | `cadastros/repositories.py`, `cadastros/services.py` |
 | T005.3 Criar telas de lista, cadastro e edição de tema | Feita | `cadastros/forms.py`, `cadastros/views.py`, `cadastros/urls.py`, `cadastros/templates/cadastros/temas.html`, `cadastros/templates/cadastros/editar_tema.html` |
 | T005.4 Carregar os temas reais da apostila (carga inicial) | Feita (26 temas) | `cadastros/management/commands/carregar_temas.py`, `cadastros/dados/temas.csv` |
-| T005.5 Testes do cadastro e da classificação | Feita (<<n>> testes) | `cadastros/tests/test_temas.py` |
+| T005.5 Testes do cadastro e da classificação | Feita (14 testes) | `cadastros/tests/test_temas.py` |
 
 ### Mudanças em relação ao plano
 - O campo se chama `nome`, como no Trello e em `Ciclo.nome`, e não `titulo`, como no
   `banco/schema.sql` (exemplo do seminário, não o esquema oficial).
 - Unicidade do nome e rótulo opcional foram decisões nossas: a tarefa não as
   especifica. O rótulo guarda só o número da apostila.
+- **Por que o rótulo não é obrigatório, se a RF005 diz "registrando o rótulo"
+  (revisão de 03/11/2026):** o rótulo é informativo. A cobertura da apostila (RF010)
+  separa os temas pelo `tipo`, não pelo rótulo. Os temas reais entram pela carga
+  inicial, todos com rótulo, e a apostila praticamente não muda. Por isso não foi
+  criada a restrição "apostila exige rótulo; opcional não tem rótulo".
+- **Limite conhecido:** a unicidade do nome diferencia maiúsculas de minúsculas.
+  "Sagrada Tradição" e "SAGRADA TRADIÇÃO" podem coexistir, e um tema da apostila
+  duplicado assim apareceria sempre como "não alocado" na cobertura. O risco foi
+  aceito porque temas novos são raros. A correção, se necessária, é uma
+  `UniqueConstraint` sobre `Lower("nome")`.
+- Não há exclusão de tema: a RF005 pede só cadastrar, consultar e editar. A seção
+  3.1.6 da especificação cita "exclusão lógica" para todos os cadastros, mas a RF005,
+  que é mais específica, prevaleceu.
 - O vínculo do tema com a montagem do cronograma ("fica disponível para escolher")
   depende do módulo Cronograma, que ainda não existe. Esta história entrega a lista
   de temas que ele vai consumir.
@@ -320,3 +333,75 @@ preserva o registro, e a exclusão a pedido o apaga.
 - O critério "imediatamente disponível na grade de presença" só pode ser verificado
   quando o módulo Presença existir. A consulta que a grade vai usar já está pronta
   (`listar_perseverantes_ativos`).
+
+---
+
+## US006 — Montar o cronograma do ciclo
+
+**Responsável:** Cauã · **Sprint:** 1 (entregue na Sprint 2) · **RF:** RF006 · **Situação:** em revisão (branch `us006-montar-cronograma-do-ciclo`); 23 testes novos, suíte completa com 146 passando (03/11/2026)
+
+### O que faz
+Como coordenador, quero agendar formações informando data, tema e formador, para ter o
+cronograma completo do ciclo em um só lugar.
+
+Critério de aceitação: cadastrar uma formação com data, tema e formador faz ela
+aparecer no cronograma, em ordem cronológica, com data, tema, formador e situação
+visíveis.
+
+### Como foi feita
+- Nova app `cronograma`, registrada em `INSTALLED_APPS`, com as mesmas camadas das
+  outras (views → services → repositories → models).
+- `Formacao` herda de `RegistroBase` (RN008) e tem `data`, `tema` (opcional),
+  `formador` (opcional), `situacao` e `descricao`. A situação usa `TextChoices`
+  (prevista, realizada, cancelada) e tem o CHECK `formacao_situacao_valida`, como o
+  `tipo` do tema. As FKs para tema e formador usam `PROTECT`: não se apaga um tema ou
+  formador que já está no cronograma.
+- **O ciclo não é guardado na formação (RN002).** Ele é derivado da data: o
+  repositório lista as formações com `data` entre `inicio` e `fim` do ciclo, e o
+  serviço descobre o ciclo de uma data com `buscar_ciclo_da_data`. Isso funciona
+  porque os ciclos não se sobrepõem (`ExclusionConstraint` da US002).
+- Uma data fora de qualquer ciclo é recusada com a mensagem "Não há ciclo cadastrado
+  para esta data." É bloqueio, e não aviso, porque sem ciclo a formação não aparece
+  em cronograma nenhum (não é regra de qualidade da escala, então a RN001 não se
+  aplica).
+- O serviço `agendar_formacao` sempre grava a situação "prevista" (T006.3). O
+  `editar_formacao` muda só data, tema e descrição: a troca de formador precisa ficar
+  registrada (RN007, US009) e a mudança de situação é da US007, então a tela de edição
+  mostra os dois apenas para leitura.
+- O serviço do cronograma usa a app `cadastros` pelos serviços dela
+  (`buscar_ciclo_da_data`, `buscar_tema`, `buscar_formador`,
+  `listar_formadores_ativos`), nunca pelos modelos ou pelo ORM diretamente.
+- A escolha de formador só oferece formadores ativos, e o serviço recusa um formador
+  inativo mesmo que o ID chegue por outro caminho. A escolha de tema separa "Temas da
+  apostila" e "Temas opcionais".
+- A tela `/cronograma/` mostra o ciclo de hoje, ou o escolhido no filtro, com o
+  formulário de agendamento. Depois de agendar, volta ao ciclo da formação. O
+  formulário não pede o ciclo.
+- O link "Cronograma" da home do coordenador passou a apontar para `/cronograma/`.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T006.1 Criar o model Formacao (data, tema opcional, formador, situação, descrição) + migration | Feita | `cronograma/models.py`, `cronograma/admin.py`, `cronograma/migrations/0001_initial.py` |
+| T006.2 Criar repositório de formações por ciclo, derivando o ciclo pela data (RN002) | Feita | `cronograma/repositories.py`; `buscar_ciclo_da_data` em `cadastros/repositories.py` e `cadastros/services.py` |
+| T006.3 Criar serviço de agendamento (situação inicial "prevista") | Feita | `cronograma/services.py` |
+| T006.4 Criar tela do cronograma em ordem cronológica (data, tema, formador, situação) | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cronograma.html`, `config/urls.py` |
+| T006.5 Criar formulário de inclusão e edição de formação | Feita | `cronograma/forms.py`, `cronograma/templates/cronograma/editar_formacao.html` |
+| T006.6 Testes: ordem cronológica, derivação do ciclo e situação inicial | Feita (23 testes) | `cronograma/tests/test_formacao.py` (21), `cadastros/tests/test_consultas_para_cronograma.py` (2) |
+
+### Mudanças em relação ao plano
+- **Formador opcional.** A T006.1 lista o formador sem "opcional", mas a US007
+  (escalar formador) pressupõe formações ainda sem formador. A tela mostra "A
+  escalar" nesses casos.
+- **A edição não troca o formador nem a situação.** Ficam para a US007 e a US009,
+  que registram a troca (RN007).
+- Sem exclusão de formação: a RF006 não a pede. Uma formação que não vai acontecer
+  deve ser marcada como cancelada (US007).
+- Os avisos de qualidade da escala (RN001, US008) não entram aqui: o agendamento não
+  devolve lista de avisos.
+
+### Validação
+- Em 03/11/2026, `manage.py check` não acusou problemas, `makemigrations --check`
+  não encontrou mudanças pendentes e a suíte completa (146 testes) passou.
+- **Migração nova:** `cronograma/0001_initial`. Quem baixar a branch precisa rodar
+  `python manage.py migrate`.

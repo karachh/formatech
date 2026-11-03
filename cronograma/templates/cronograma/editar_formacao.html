@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Editar formação · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Editar formação</h1>
+<p>Formador: {{ formacao.formador.nome|default:"A escalar" }} · Situação: {{ formacao.get_situacao_display }}</p>
+<p><small>A troca de formador e a mudança de situação são feitas na escalação.</small></p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+  <a href="{% url 'cronograma:cronograma' %}">Cancelar</a>
+</form>
+{% endblock %}

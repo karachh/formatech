@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Cronograma · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Cronograma</h1>
+
+<h2>Agendar formação</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <p><small>O ciclo é identificado pela data.</small></p>
+  <button type="submit">Agendar</button>
+</form>
+
+<h2>Consultar por ciclo</h2>
+<form method="get">
+  {{ filtro.as_p }}
+  <button type="submit">Filtrar</button>
+</form>
+
+{% if ciclo %}
+  <h2>Cronograma de {{ ciclo.nome }}</h2>
+  {% if formacoes %}
+    <table>
+      <thead><tr><th>Data</th><th>Tema</th><th>Formador</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        {% for formacao in formacoes %}
+          <tr>
+            <td>{{ formacao.data|date:"d/m/Y" }}</td>
+            <td>{{ formacao.tema.nome|default:"Sem tema" }}</td>
+            <td>{{ formacao.formador.nome|default:"A escalar" }}</td>
+            <td>{{ formacao.get_situacao_display }}</td>
+            <td><a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Nenhuma formação agendada neste ciclo.</p>
+  {% endif %}
+{% else %}
+  <p>Selecione um ciclo para ver o cronograma.</p>
+{% endif %}
+{% endblock %}
