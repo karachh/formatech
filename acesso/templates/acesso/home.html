@@ -11,8 +11,8 @@
     <li><a href="#">Cronograma</a></li>
     {% if user.perfil == "coordenador" %}
       <li><a href="{% url 'cadastros:ciclos' %}">Ciclos</a></li>
-      <li><a href="#">Perseverantes</a></li>
-      <li><a href="#">Formadores</a></li>
+      <li><a href="{% url 'cadastros:perseverantes' %}">Perseverantes</a></li>
+      <li><a href="{% url 'cadastros:formadores' %}">Formadores</a></li>
       <li><a href="{% url 'cadastros:temas' %}">Temas</a></li>
       <li><a href="#">Presença</a></li>
       <li><a href="#">Consultas</a></li>

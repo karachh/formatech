@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Formadores · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Formadores</h1>
+
+<h2>Cadastrar formador</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Salvar</button>
+</form>
+
+<h2>Formadores cadastrados</h2>
+{% if formadores %}
+  <table>
+    <thead><tr><th>Nome</th><th>Início de serviço</th><th>Capacitado</th><th>Situação</th><th></th></tr></thead>
+    <tbody>
+      {% for formador in formadores %}
+        <tr>
+          <td>{{ formador.nome }}</td>
+          <td>{{ formador.inicio_servico|date:"d/m/Y" }}</td>
+          <td>{% if formador.capacitado %}Sim{% else %}Não{% endif %}</td>
+          <td>{% if formador.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+          <td>
+            <a href="{% url 'cadastros:editar_formador' formador.id %}">Editar</a>
+            {% if formador.ativo %}
+              <form method="post" action="{% url 'cadastros:inativar_formador' formador.id %}">
+                {% csrf_token %}
+                <button type="submit">Inativar</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Nenhum formador cadastrado.</p>
+{% endif %}
+{% endblock %}

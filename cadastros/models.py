@@ -80,3 +80,22 @@ class Tema(RegistroBase):
 
     def __str__(self):
         return self.nome
+
+
+class Formador(RegistroBase):
+    nome = models.CharField(max_length=150)
+    inicio_servico = models.DateField("início de serviço")
+    capacitado = models.BooleanField()
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nome
+
+
+class Perseverante(RegistroBase):
+    nome = models.CharField(max_length=150)
+    ciclo = models.ForeignKey(Ciclo, on_delete=models.PROTECT)
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nome
