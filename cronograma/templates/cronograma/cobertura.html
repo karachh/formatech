@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Cobertura da apostila · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Cobertura da apostila</h1>
+
+<form method="get">
+  <label for="ciclo">Ciclo</label>
+  <select name="ciclo" id="ciclo">
+    {% for c in ciclos %}
+      <option value="{{ c.id }}" {% if ciclo and c.id == ciclo.id %}selected{% endif %}>{{ c.nome }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Ver</button>
+</form>
+
+{% if not ciclo %}
+  <p>Não há ciclo para exibir. Escolha um ciclo.</p>
+{% else %}
+  <h2 class="erro">Não alocados ({{ cobertura.nao_alocados|length }})</h2>
+  {% if cobertura.nao_alocados %}
+    <ul>{% for tema in cobertura.nao_alocados %}<li><strong>{{ tema.nome }}</strong></li>{% endfor %}</ul>
+  {% else %}
+    <p>Nenhum tema sem data marcada.</p>
+  {% endif %}
+
+  <h2>Agendados ({{ cobertura.agendados|length }})</h2>
+  {% if cobertura.agendados %}
+    <ul>{% for tema in cobertura.agendados %}<li>{{ tema.nome }}</li>{% endfor %}</ul>
+  {% else %}
+    <p>Nenhum tema agendado.</p>
+  {% endif %}
+
+  <h2 class="sucesso">Realizados ({{ cobertura.realizados|length }})</h2>
+  {% if cobertura.realizados %}
+    <ul>{% for tema in cobertura.realizados %}<li>{{ tema.nome }}</li>{% endfor %}</ul>
+  {% else %}
+    <p>Nenhum tema realizado.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

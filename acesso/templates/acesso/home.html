@@ -10,6 +10,7 @@
   <ul>
      {% if user.perfil == "coordenador" %}
       <li><a href="{% url 'cronograma:cronograma' %}">Cronograma</a></li>
+      <li><a href="{% url 'cronograma:cobertura' %}">Cobertura da apostila</a></li>
     {% else %}
       <li><a href="#">Cronograma</a></li>
     {% endif %}

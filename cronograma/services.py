@@ -99,3 +99,31 @@ def _buscar_formador(formador_id):
     if not formador.ativo:
         raise ValidationError({"formador_id": "Este formador está inativo."})
     return formador
+
+
+
+def classificar_cobertura(ciclo):
+    """RN005: sempre calculado, nunca armazenado.
+
+    Devolve {"nao_alocados": [...], "agendados": [...], "realizados": [...]}.
+    Cancelada não cobre nada. Se um tema tem várias formações, vale a mais
+    avançada: realizada > prevista.
+    """
+    temas = repositories.listar_temas_da_apostila()
+    situacao_por_tema = {}
+    for formacao in repositories.listar_formacoes_com_tema_do_ciclo(ciclo):
+        if formacao.situacao == Formacao.Situacao.REALIZADA:
+            situacao_por_tema[formacao.tema_id] = Formacao.Situacao.REALIZADA
+        elif formacao.situacao == Formacao.Situacao.PREVISTA:
+            situacao_por_tema.setdefault(formacao.tema_id, Formacao.Situacao.PREVISTA)
+
+    cobertura = {"nao_alocados": [], "agendados": [], "realizados": []}
+    for tema in temas:
+        situacao = situacao_por_tema.get(tema.pk)
+        if situacao == Formacao.Situacao.REALIZADA:
+            cobertura["realizados"].append(tema)
+        elif situacao == Formacao.Situacao.PREVISTA:
+            cobertura["agendados"].append(tema)
+        else:
+            cobertura["nao_alocados"].append(tema)
+    return cobertura

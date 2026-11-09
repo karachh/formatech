@@ -68,3 +68,13 @@ def editar_formacao(request, formacao_id):
             messages.success(request, f"Formação de {formacao.data:%d/%m/%Y} alterada.")
             return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
     return render(request, "cronograma/editar_formacao.html", {"form": form, "formacao": formacao})
+
+
+def cobertura(request):
+    ciclos = services.listar_ciclos()
+    ciclo_id = request.GET.get("ciclo") or None
+    ciclo = services.ciclo_do_cronograma(ciclo_id)
+    contexto = {"ciclos": ciclos, "ciclo": ciclo, "cobertura": None}
+    if ciclo is not None:
+        contexto["cobertura"] = services.classificar_cobertura(ciclo)
+    return render(request, "cronograma/cobertura.html", contexto)
