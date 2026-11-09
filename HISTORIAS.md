@@ -405,3 +405,59 @@ visíveis.
   não encontrou mudanças pendentes e a suíte completa (146 testes) passou.
 - **Migração nova:** `cronograma/0001_initial`. Quem baixar a branch precisa rodar
   `python manage.py migrate`.
+
+
+
+
+---
+
+## US011 — Consultar cobertura da apostila
+
+**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF011 · **Situação:** em andamento
+
+### O que faz
+Como coordenador ou formador, quero ver quais temas obrigatórios ainda não têm data
+marcada no ciclo, para garantir que a apostila inteira seja coberta a tempo.
+
+Critérios de aceitação: selecionado um ciclo, a tela mostra os temas da apostila
+separados em três listas: não alocados, agendados e realizados.
+
+### Como foi feita
+- A cobertura é sempre calculada a partir das formações do ciclo e nunca armazenada
+  (RN005, RN006): não há contador nem campo de situação do tema. Não há model novo
+  nem migração.
+- As formações do ciclo são as que têm data entre o início e o fim, inclusive (RN002),
+  porque o ciclo é derivado da data. Só entram na conta os temas com `tipo=apostila`;
+  os opcionais ficam fora.
+- Classificação de cada tema (`services.classificar_cobertura`):
+  - **realizado:** existe formação `realizada` com o tema no ciclo;
+  - **agendado:** existe formação `prevista` e nenhuma realizada;
+  - **não alocado:** nenhuma formação, ou só formações `canceladas` (a cancelada não
+    cobre o tema, que volta a não alocado).
+  - Se o mesmo tema tem várias formações, vale a mais avançada: realizada > prevista.
+  - Formação sem tema (CA002) não cobre nada.
+- Camadas do AGENTS.md: o repositório (`listar_temas_da_apostila`,
+  `listar_formacoes_com_tema_do_ciclo`) é o único que usa o ORM; o serviço classifica
+  sem receber `request`; a view só lê o ciclo escolhido e chama o serviço.
+- A tela (`/cobertura/`) tem seletor de ciclo; sem escolha, usa o ciclo que contém o
+  dia de hoje (`ciclo_do_cronograma`). Os não alocados vêm primeiro e em destaque.
+- A tela é de consulta para os dois perfis: não usa `@coordenador_required`, só o login
+  exigido pelo middleware. O link "Cobertura da apostila" fica na home para
+  coordenador e formador.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T011.1 Criar consulta dos temas da apostila e das formações do ciclo (repositório) | Feita | `cronograma/repositories.py` |
+| T011.2 Criar serviço que classifica cada tema em não alocado / agendado / realizado, sempre calculado (RN005) | Feita | `cronograma/services.py` |
+| T011.3 Criar tela de cobertura com seleção de ciclo e destaque para os não alocados | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cobertura.html`, `acesso/templates/acesso/home.html` |
+| T011.4 Testes: cancelada volta a não alocado, opcionais ficam fora, soma = total de temas (CA004) | Feita (<<n>> testes) | `cronograma/tests/test_cobertura.py` |
+
+### Mudanças em relação ao plano
+- Decisão nossa, não especificada: com várias formações do mesmo tema no ciclo, vale a
+  mais avançada (realizada > prevista).
+- A situação da formação só muda para `realizada` pelo admin por enquanto: nenhuma
+  tela altera a situação. Sem isso, a lista "realizados" só se preenche por esse
+  caminho.
+- Ao incluir o link da cobertura, o link "Cronograma" da home foi removido por engano e
+  quebrou `test_menu_completo_para_coordenador` (US001); foi restaurado.
