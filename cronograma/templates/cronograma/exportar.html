@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Exportar cronograma · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Exportar o cronograma do mês</h1>
+
+<form method="get">
+  <label for="mes">Mês</label>
+  <input type="month" name="mes" id="mes" value="{{ mes }}">
+  <button type="submit">Ver</button>
+</form>
+
+<textarea id="texto" rows="15" cols="70" readonly>{{ texto }}</textarea>
+<p><button type="button" id="copiar">Copiar</button> <span id="aviso"></span></p>
+
+<script>
+  document.getElementById("copiar").addEventListener("click", function () {
+    var campo = document.getElementById("texto");
+    campo.select();
+    navigator.clipboard.writeText(campo.value).then(function () {
+      document.getElementById("aviso").textContent = "Copiado!";
+    });
+  });
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+from .exportacao import ExportadorTexto
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -127,3 +128,28 @@ def classificar_cobertura(ciclo):
         else:
             cobertura["nao_alocados"].append(tema)
     return cobertura
+
+
+MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+         "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+
+
+def mes_da_exportacao(valor=None):
+    """Converte 'AAAA-MM' em (ano, mes). Vazio ou inválido: o mês de hoje."""
+    try:
+        ano, mes = (int(parte) for parte in (valor or "").split("-"))
+        if 1 <= mes <= 12 and 1 <= ano <= 9999:
+            return ano, mes
+    except ValueError:
+        pass
+    hoje = timezone.localdate()
+    return hoje.year, hoje.month
+
+
+def exportar_cronograma_do_mes(ano, mes):
+    """RF016: texto pronto para copiar, sem as formações canceladas."""
+    formacoes = repositories.listar_formacoes_do_mes(ano, mes)
+    titulo = f"{MESES[mes - 1]} de {ano}"
+    if not formacoes:
+        return f"Cronograma de {titulo}\n\nNenhuma formação neste mês."
+    return ExportadorTexto().exportar(titulo, formacoes)
