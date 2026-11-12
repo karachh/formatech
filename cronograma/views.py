@@ -78,3 +78,10 @@ def cobertura(request):
     if ciclo is not None:
         contexto["cobertura"] = services.classificar_cobertura(ciclo)
     return render(request, "cronograma/cobertura.html", contexto)
+
+
+@coordenador_required
+def exportar(request):
+    ano, mes = services.mes_da_exportacao(request.GET.get("mes"))
+    texto = services.exportar_cronograma_do_mes(ano, mes)
+    return render(request, "cronograma/exportar.html", {"mes": f"{ano:04d}-{mes:02d}", "texto": texto})

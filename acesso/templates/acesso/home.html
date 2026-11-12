@@ -21,7 +21,7 @@
       <li><a href="{% url 'cadastros:temas' %}">Temas</a></li>
       <li><a href="#">Presença</a></li>
       <li><a href="#">Consultas</a></li>
-      <li><a href="#">Exportação</a></li>
+      <li><a href="{% url 'cronograma:exportar' %}">Exportação</a></li>
     {% else %}
       <li><a href="#">Temas que já ministrei</a></li>
     {% endif %}

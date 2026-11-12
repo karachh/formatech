@@ -30,3 +30,13 @@ def listar_formacoes_com_tema_do_ciclo(ciclo):
         .select_related("tema")
         .order_by("data", "id")
     )
+
+
+def listar_formacoes_do_mes(ano, mes):
+    """Formações do mês, sem as canceladas."""
+    return list(
+        Formacao.objects.filter(data__year=ano, data__month=mes)
+        .exclude(situacao=Formacao.Situacao.CANCELADA)
+        .select_related("tema", "formador")
+        .order_by("data", "id")
+    )
