@@ -461,3 +461,57 @@ separados em três listas: não alocados, agendados e realizados.
   caminho.
 - Ao incluir o link da cobertura, o link "Cronograma" da home foi removido por engano e
   quebrou `test_menu_completo_para_coordenador` (US001); foi restaurado.
+
+
+
+  
+---
+
+## US016 — Exportar o cronograma do mês
+
+**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF016 · **Situação:** em andamento
+
+### O que faz
+Como coordenador, quero ver o cronograma do mês já formatado como texto, com botão de
+copiar, para colar direto no grupo de mensagens do ministério.
+
+Critérios de aceitação: escolhido um mês, a tela mostra o cronograma como texto corrido
+pronto para copiar, com uma linha por formação (data, tema, formador); formações
+canceladas não aparecem no texto exportado.
+
+### Como foi feita
+- Não há model novo nem migração: o texto é sempre gerado a partir das formações
+  (RN006), nada é armazenado.
+- Padrão **Template Method** (`cronograma/exportacao.py`): `ExportadorBase.exportar`
+  define o esqueleto fixo (cabeçalho, uma linha por formação, rodapé) e as subclasses
+  definem cada passo. `ExportadorTexto` produz o texto simples para o grupo de
+  mensagens. Um novo formato de exportação (por exemplo, HTML) só precisa de outra
+  subclasse, sem mexer no esqueleto.
+- O repositório (`listar_formacoes_do_mes`) é o único que usa o ORM: filtra por ano e
+  mês, exclui as canceladas e ordena por data. O serviço (`exportar_cronograma_do_mes`)
+  monta o título e chama o exportador, sem receber `request`.
+- O mês vem de um `<input type="month">`, no formato `AAAA-MM`. Sem escolha, ou com
+  valor inválido, o serviço usa o mês de hoje (`mes_da_exportacao`).
+- Formato da linha: `dd/mm - tema - formador`. Formação sem tema aparece como
+  "Sem tema" e sem formador, como "a definir". Mês sem formações mostra
+  "Nenhuma formação neste mês.".
+- A tela (`/exportar/`) mostra o texto em uma área somente leitura, com botão
+  "Copiar" que usa `navigator.clipboard`.
+- A tela é só do coordenador (`@coordenador_required`): formador recebe 403 e anônimo
+  vai ao login. O link "Exportação" da home do coordenador passou a apontar para ela.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T016.1 Criar o formatador de texto do cronograma (padrão Template Method) | Feita | `cronograma/exportacao.py` |
+| T016.2 Criar serviço que busca as formações do mês, sem as canceladas | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
+| T016.3 Criar tela com seletor de mês e botão de copiar | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/exportar.html`, `acesso/templates/acesso/home.html` |
+| T016.4 Testes do texto gerado (uma linha por formação, canceladas fora) | Feita (<<n>> testes) | `cronograma/tests/test_exportacao.py` |
+
+### Mudanças em relação ao plano
+- Decisões nossas, não especificadas: o formato `dd/mm - tema - formador`, os textos
+  "Sem tema" e "a definir", e o mês de hoje como padrão.
+- A mudança da situação de uma formação para `cancelada` só é possível pelo admin por
+  enquanto; nenhuma tela altera a situação.
+- O botão "Copiar" só funciona em `localhost` ou HTTPS, por exigência do
+  `navigator.clipboard`.
