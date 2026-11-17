@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Escalar formador · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Escalar formador</h1>
+<p>Formação de {{ formacao.data|date:"d/m/Y" }} · {{ formacao.tema.nome|default:"Sem tema" }}</p>
+
+<form method="get">
+  {{ form.as_p }}
+  <button type="submit">Consultar</button>
+</form>
+
+{% if dados %}
+  <h2>Informações da escalação</h2>
+  <p>
+    Temas já ministrados:
+    {% if dados.temas_ministrados %}
+      {{ dados.temas_ministrados|join:", " }}
+    {% else %}
+      Nenhum tema registrado.
+    {% endif %}
+  </p>
+  <p>Carga no ciclo: {{ dados.carga_formacoes }} formação{{ dados.carga_formacoes|pluralize }}.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="formador_id" value="{{ form.cleaned_data.formador_id }}">
+    <button type="submit">Escalar formador</button>
+  </form>
+{% endif %}
+
+<p><a href="{% url 'cronograma:cronograma' %}">Voltar ao cronograma</a></p>
+{% endblock %}

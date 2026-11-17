@@ -71,6 +71,33 @@ def editar_formacao(formacao_id, data, tema_id, descricao=""):
     return _validar_e_salvar(formacao)
 
 
+def dados_para_escalacao(formacao_id, formador_id):
+    """Calcula temas ministrados e carga do formador para a escalação."""
+    formacao = _buscar_formacao_sem_formador(formacao_id)
+    formador = _buscar_formador(formador_id)
+    ciclo = ciclo_da_formacao(formacao)
+    if ciclo is None:
+        raise ValidationError({"data": MENSAGEM_SEM_CICLO})
+    return {
+        "temas_ministrados": repositories.listar_temas_ministrados_por_formador(formador.pk),
+        "carga_formacoes": repositories.contar_formacoes_do_formador_no_ciclo(formador.pk, ciclo),
+    }
+
+
+def escalar_formador(formacao_id, formador_id):
+    """Atribui um formador ativo somente quando a formação ainda não foi escalada."""
+    formacao = _buscar_formacao_sem_formador(formacao_id)
+    formacao.formador = _buscar_formador(formador_id)
+    return repositories.salvar_formacao(formacao)
+
+
+def _buscar_formacao_sem_formador(formacao_id):
+    formacao = repositories.buscar_formacao(formacao_id)
+    if formacao.formador_id is not None:
+        raise ValidationError("Esta formação já tem um formador.")
+    return formacao
+
+
 def _validar_e_salvar(formacao):
     # tema e formador já foram conferidos; excluí-los evita consultar o banco de novo.
     formacao.clean_fields(exclude=["tema", "formador"])

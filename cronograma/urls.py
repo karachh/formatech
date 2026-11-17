@@ -7,6 +7,7 @@ app_name = "cronograma"
 urlpatterns = [
     path("cronograma/", views.cronograma, name="cronograma"),
     path("cronograma/<int:formacao_id>/editar/", views.editar_formacao, name="editar_formacao"),
+    path("cronograma/<int:formacao_id>/escalar/", views.escalar_formador, name="escalar_formador"),
     path("cobertura/", views.cobertura, name="cobertura"),
     path("exportar/", views.exportar, name="exportar"),
 ]

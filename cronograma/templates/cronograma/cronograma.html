@@ -31,7 +31,12 @@
             <td>{{ formacao.tema.nome|default:"Sem tema" }}</td>
             <td>{{ formacao.formador.nome|default:"A escalar" }}</td>
             <td>{{ formacao.get_situacao_display }}</td>
-            <td><a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a></td>
+            <td>
+              <a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a>
+              {% if not formacao.formador %}
+                · <a href="{% url 'cronograma:escalar_formador' formacao.id %}">Escalar formador</a>
+              {% endif %}
+            </td>
           </tr>
         {% endfor %}
       </tbody>

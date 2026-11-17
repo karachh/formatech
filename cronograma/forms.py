@@ -47,3 +47,13 @@ class AgendamentoForm(FormacaoForm):
         self.fields["formador_id"].choices = [("", "A escalar")] + [
             (str(formador.pk), formador.nome) for formador in formadores
         ]
+
+
+class EscalacaoForm(forms.Form):
+    formador_id = forms.ChoiceField(label="Formador")
+
+    def __init__(self, *args, formadores=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["formador_id"].choices = [
+            ("", "Selecione um formador")
+        ] + [(str(formador.pk), formador.nome) for formador in formadores]

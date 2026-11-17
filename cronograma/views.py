@@ -8,7 +8,7 @@ from acesso.decorators import coordenador_required
 from cadastros.forms import CicloFiltroForm
 
 from . import services
-from .forms import AgendamentoForm, FormacaoForm
+from .forms import AgendamentoForm, EscalacaoForm, FormacaoForm
 from .models import Formacao
 
 
@@ -68,6 +68,41 @@ def editar_formacao(request, formacao_id):
             messages.success(request, f"Formação de {formacao.data:%d/%m/%Y} alterada.")
             return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
     return render(request, "cronograma/editar_formacao.html", {"form": form, "formacao": formacao})
+
+
+@coordenador_required
+def escalar_formador(request, formacao_id):
+    try:
+        formacao = services.buscar_formacao(formacao_id)
+    except Formacao.DoesNotExist:
+        raise Http404("Formação não encontrada.")
+
+    formadores = services.listar_formadores_ativos()
+    form = EscalacaoForm(
+        request.POST if request.method == "POST" else request.GET or None,
+        formadores=formadores,
+    )
+    dados = None
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            formacao = services.escalar_formador(formacao_id, form.cleaned_data["formador_id"])
+        except ValidationError as erro:
+            form.add_error(None, erro)
+        else:
+            messages.success(request, f"Formador “{formacao.formador}” escalado.")
+            return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
+    elif request.method == "GET" and request.GET and form.is_valid():
+        try:
+            dados = services.dados_para_escalacao(formacao_id, form.cleaned_data["formador_id"])
+        except ValidationError as erro:
+            form.add_error(None, erro)
+
+    return render(
+        request,
+        "cronograma/escalar_formador.html",
+        {"form": form, "formacao": formacao, "dados": dados},
+    )
 
 
 def cobertura(request):

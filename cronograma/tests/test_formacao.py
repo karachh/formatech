@@ -66,6 +66,32 @@ class RepositorioFormacaoTests(ComDados, TestCase):
             [primeiro_dia, meio, ultimo_dia],
         )
 
+    def test_lista_temas_ministrados_considera_formacoes_realizadas(self):
+        outro_tema = Tema.objects.create(nome="Oração", tipo=Tema.Tipo.APOSTILA, rotulo="2")
+        self.formacao(date(2026, 3, 6), tema=self.tema, formador=self.formador,
+                      situacao=Formacao.Situacao.REALIZADA)
+        self.formacao(date(2026, 4, 6), tema=outro_tema, formador=self.formador,
+                      situacao=Formacao.Situacao.PREVISTA)
+        self.formacao(date(2026, 5, 6), tema=outro_tema, situacao=Formacao.Situacao.REALIZADA)
+
+        self.assertEqual(
+            repositories.listar_temas_ministrados_por_formador(self.formador.pk),
+            ["Sagrada Tradição"],
+        )
+
+    def test_carga_no_ciclo_conta_formacoes_nao_canceladas(self):
+        self.formacao(date(2027, 3, 6), formador=self.formador)
+        self.formacao(date(2027, 4, 6), formador=self.formador,
+                      situacao=Formacao.Situacao.REALIZADA)
+        self.formacao(date(2027, 5, 6), formador=self.formador,
+                      situacao=Formacao.Situacao.CANCELADA)
+        self.formacao(date(2028, 3, 6), formador=self.formador)
+
+        self.assertEqual(
+            repositories.contar_formacoes_do_formador_no_ciclo(self.formador.pk, self.ciclo),
+            2,
+        )
+
 
 CICLO = Ciclo(pk=1, nome="2027", inicio=date(2027, 2, 1), fim=date(2027, 12, 15))
 TEMA = Tema(pk=2, nome="Sagrada Tradição", tipo=Tema.Tipo.APOSTILA, rotulo="1")
@@ -158,6 +184,38 @@ class ServicoFormacaoTests(SimpleTestCase):
         self.assertEqual(editada.situacao, Formacao.Situacao.REALIZADA)
 
 
+class ServicoEscalacaoTests(ComDados, TestCase):
+    def test_escala_formador_ativo_em_formacao_sem_formador(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        resultado = services.escalar_formador(formacao.pk, str(self.formador.pk))
+
+        self.assertEqual(resultado.formador, self.formador)
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.formador, self.formador)
+
+    def test_nao_substitui_formador_ja_escalado(self):
+        formacao = self.formacao(date(2027, 3, 6), formador=self.formador)
+
+        with self.assertRaises(ValidationError):
+            services.escalar_formador(formacao.pk, self.formador.pk)
+
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.formador, self.formador)
+
+    def test_nao_escala_formador_inativo(self):
+        inativo = Formador.objects.create(
+            nome="Bruno", inicio_servico=date(2020, 1, 10), capacitado=True, ativo=False
+        )
+        formacao = self.formacao(date(2027, 3, 6))
+
+        with self.assertRaises(ValidationError):
+            services.escalar_formador(formacao.pk, inativo.pk)
+
+        formacao.refresh_from_db()
+        self.assertIsNone(formacao.formador)
+
+
 class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
     def agendar(self, **campos):
         dados = {
@@ -218,6 +276,15 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
 
         self.assertNotContains(self.client.get(URL), "Bruno")
 
+    def test_formacao_sem_formador_oferece_acao_de_escalacao(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        resposta = self.client.get(URL, {"ciclo": self.ciclo.pk})
+
+        self.assertContains(
+            resposta,
+            reverse("cronograma:escalar_formador", args=[formacao.pk]),
+        )
+
     def test_escolha_de_tema_separa_apostila_e_opcionais(self):
         Tema.objects.create(nome="Retiro de Carnaval", tipo=Tema.Tipo.OPCIONAL)
 
@@ -244,6 +311,39 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
         self.assertEqual(formacao.data, date(2027, 4, 10))
         self.assertIsNone(formacao.tema)
         self.assertEqual(formacao.descricao, "Retiro")
+        self.assertEqual(formacao.formador, self.formador)
+
+    def test_consulta_exibe_temas_realizados_e_carga_do_ciclo(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        self.formacao(
+            date(2026, 3, 6),
+            tema=self.tema,
+            formador=self.formador,
+            situacao=Formacao.Situacao.REALIZADA,
+        )
+        self.formacao(date(2027, 4, 6), formador=self.formador)
+        self.formacao(
+            date(2027, 5, 6),
+            formador=self.formador,
+            situacao=Formacao.Situacao.CANCELADA,
+        )
+        url = reverse("cronograma:escalar_formador", args=[formacao.pk])
+
+        resposta = self.client.get(url, {"formador_id": self.formador.pk})
+
+        self.assertContains(resposta, "Sagrada Tradição")
+        self.assertContains(resposta, "Carga no ciclo: 1 formação.")
+        self.assertContains(resposta, "Escalar formador")
+
+    def test_escalacao_pelo_fluxo_atualiza_cronograma(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        url = reverse("cronograma:escalar_formador", args=[formacao.pk])
+
+        resposta = self.client.post(url, {"formador_id": self.formador.pk}, follow=True)
+
+        self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
+        self.assertContains(resposta, "<td>Ana</td>", html=True)
+        formacao.refresh_from_db()
         self.assertEqual(formacao.formador, self.formador)
 
     def test_editar_inexistente_da_404(self):
