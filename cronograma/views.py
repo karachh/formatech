@@ -3,12 +3,13 @@ from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from acesso.decorators import coordenador_required
 from cadastros.forms import CicloFiltroForm
 
 from . import services
-from .forms import AgendamentoForm, EscalacaoForm, FormacaoForm
+from .forms import AgendamentoForm, EscalacaoForm, FormacaoForm, SituacaoForm
 from .models import Formacao
 
 
@@ -44,6 +45,7 @@ def cronograma(request):
             "filtro": filtro,
             "ciclo": ciclo,
             "formacoes": services.listar_formacoes_do_ciclo(ciclo) if ciclo else [],
+            "situacoes": Formacao.Situacao.choices,
         },
     )
 
@@ -103,6 +105,26 @@ def escalar_formador(request, formacao_id):
         "cronograma/escalar_formador.html",
         {"form": form, "formacao": formacao, "dados": dados},
     )
+
+
+@coordenador_required
+@require_POST
+def alterar_situacao(request, formacao_id):
+    form = SituacaoForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Selecione uma situação válida.")
+        return redirect(reverse("cronograma:cronograma"))
+
+    try:
+        formacao = services.alterar_situacao(formacao_id, form.cleaned_data["situacao"])
+    except Formacao.DoesNotExist:
+        raise Http404("Formação não encontrada.")
+    except ValidationError as erro:
+        messages.error(request, " ".join(erro.messages))
+        return redirect(reverse("cronograma:cronograma"))
+
+    messages.success(request, f"Situação alterada para {formacao.get_situacao_display()}.")
+    return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
 
 
 def cobertura(request):

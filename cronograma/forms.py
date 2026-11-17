@@ -3,6 +3,8 @@ from django import forms
 from cadastros.forms import CAMPO_DATA
 from cadastros.models import Tema
 
+from .models import Formacao
+
 
 def _opcoes_de_tema(temas):
     """CA002: temas da apostila e opcionais separados, com a opção de deixar em branco."""
@@ -57,3 +59,7 @@ class EscalacaoForm(forms.Form):
         self.fields["formador_id"].choices = [
             ("", "Selecione um formador")
         ] + [(str(formador.pk), formador.nome) for formador in formadores]
+
+
+class SituacaoForm(forms.Form):
+    situacao = forms.ChoiceField(label="Situação", choices=Formacao.Situacao.choices)

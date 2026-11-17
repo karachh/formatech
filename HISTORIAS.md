@@ -420,14 +420,15 @@ situação entre prevista, realizada e cancelada, para manter o cronograma atual
   ativos e impedindo substituir um formador já escalado. A consulta de temas
   ministrados e carga do ciclo é informativa; cancelar formações não conta na carga.
 - A alteração da situação valida no serviço os três valores definidos pelo modelo
-  e persiste pelo repositório, sem introduzir migração.
+  e persiste pelo repositório, sem introduzir migração. No cronograma, a ação usa
+  formulário POST com CSRF e é restrita ao coordenador.
 
 ### Tarefas
 | Tarefa | Situação | Onde |
 |---|---|---|
 | T007.1 Implementar escalação de formador | Feita (commit `ad0394e`) | `cronograma/services.py`, `cronograma/repositories.py`, `cronograma/forms.py`, `cronograma/views.py`, `cronograma/templates/cronograma/` |
 | T007.2 Serviço de alteração de situação | Feita | `cronograma/services.py` |
-| T007.3 Alteração de situação pelo cronograma | Pendente | — |
+| T007.3 Alteração de situação pelo cronograma | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cronograma.html` |
 | T007.4 Testes da US007 | Pendente | `cronograma/tests/test_formacao.py` |
 
 ### Mudanças em relação ao plano
