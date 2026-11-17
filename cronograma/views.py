@@ -3,13 +3,21 @@ from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from acesso.decorators import coordenador_required
 from cadastros.forms import CicloFiltroForm
+from cadastros.models import Formador, Tema
 
 from . import services
-from .forms import AgendamentoForm, EscalacaoForm, FormacaoForm, SituacaoForm
+from .forms import (
+    AgendamentoForm,
+    EscalacaoForm,
+    FormacaoForm,
+    HistoricoFormadorForm,
+    HistoricoTemaForm,
+    SituacaoForm,
+)
 from .models import Formacao
 
 
@@ -135,6 +143,45 @@ def cobertura(request):
     if ciclo is not None:
         contexto["cobertura"] = services.classificar_cobertura(ciclo)
     return render(request, "cronograma/cobertura.html", contexto)
+
+
+@require_GET
+def historico(request):
+    formadores = services.listar_formadores()
+    temas = services.listar_temas()
+    formador_form = HistoricoFormadorForm(request.GET or None, formadores=formadores)
+    tema_form = HistoricoTemaForm(request.GET or None, temas=temas)
+    formador = None
+    tema = None
+    historico_temas = None
+    historico_formadores = None
+
+    if formador_form.is_valid() and formador_form.cleaned_data["formador_id"]:
+        try:
+            formador = services.buscar_formador(formador_form.cleaned_data["formador_id"])
+        except Formador.DoesNotExist:
+            raise Http404("Formador não encontrado.")
+        historico_temas = services.historico_temas_por_formador(formador.pk)
+
+    if tema_form.is_valid() and tema_form.cleaned_data["tema_id"]:
+        try:
+            tema = services.buscar_tema(tema_form.cleaned_data["tema_id"])
+        except Tema.DoesNotExist:
+            raise Http404("Tema não encontrado.")
+        historico_formadores = services.historico_formadores_por_tema(tema.pk)
+
+    return render(
+        request,
+        "cronograma/historico.html",
+        {
+            "formador_form": formador_form,
+            "tema_form": tema_form,
+            "formador": formador,
+            "tema": tema,
+            "historico_temas": historico_temas,
+            "historico_formadores": historico_formadores,
+        },
+    )
 
 
 @coordenador_required

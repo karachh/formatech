@@ -63,3 +63,27 @@ class EscalacaoForm(forms.Form):
 
 class SituacaoForm(forms.Form):
     situacao = forms.ChoiceField(label="Situação", choices=Formacao.Situacao.choices)
+
+
+class HistoricoFormadorForm(forms.Form):
+    formador_id = forms.ChoiceField(label="Formador", required=False)
+
+    def __init__(self, *args, formadores=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["formador_id"].choices = [("", "Selecione um formador")] + [
+            (
+                str(formador.pk),
+                f"{formador.nome} (inativo)" if not formador.ativo else formador.nome,
+            )
+            for formador in formadores
+        ]
+
+
+class HistoricoTemaForm(forms.Form):
+    tema_id = forms.ChoiceField(label="Tema", required=False)
+
+    def __init__(self, *args, temas=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tema_id"].choices = [("", "Selecione um tema")] + [
+            (str(tema.pk), tema.nome) for tema in temas
+        ]

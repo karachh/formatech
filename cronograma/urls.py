@@ -10,5 +10,6 @@ urlpatterns = [
     path("cronograma/<int:formacao_id>/escalar/", views.escalar_formador, name="escalar_formador"),
     path("cronograma/<int:formacao_id>/situacao/", views.alterar_situacao, name="alterar_situacao"),
     path("cobertura/", views.cobertura, name="cobertura"),
+    path("historico/", views.historico, name="historico"),
     path("exportar/", views.exportar, name="exportar"),
 ]

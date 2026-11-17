@@ -25,6 +25,18 @@ def listar_formadores_ativos():
     return cadastros.listar_formadores_ativos()
 
 
+def listar_formadores():
+    return cadastros.listar_formadores()
+
+
+def buscar_formador(formador_id):
+    return cadastros.buscar_formador(formador_id)
+
+
+def buscar_tema(tema_id):
+    return cadastros.buscar_tema(tema_id)
+
+
 def ciclo_do_cronograma(ciclo_id=None):
     """O ciclo escolhido na tela; sem escolha, o ciclo que contém o dia de hoje (ou None)."""
     if ciclo_id:
@@ -98,6 +110,14 @@ def alterar_situacao(formacao_id, situacao):
     formacao = repositories.buscar_formacao(formacao_id)
     formacao.situacao = situacao
     return repositories.salvar_formacao(formacao)
+
+
+def historico_temas_por_formador(formador_id):
+    return repositories.listar_historico_temas_por_formador(formador_id)
+
+
+def historico_formadores_por_tema(tema_id):
+    return repositories.listar_historico_formadores_por_tema(tema_id)
 
 
 def _buscar_formacao_sem_formador(formacao_id):

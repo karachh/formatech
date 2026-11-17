@@ -503,6 +503,43 @@ separados em três listas: não alocados, agendados e realizados.
   
 ---
 
+## US012 — Consultar histórico de temas por formador
+
+**RF:** RF012 · **Situação:** em desenvolvimento (branch `us012-historico-temas-formador`)
+
+### O que faz
+Como coordenador ou formador, quero consultar os temas que um formador já ministrou
+e, no sentido inverso, os formadores que já ministraram determinado tema.
+
+Critérios de aceitação: buscar um formador mostra os temas ministrados e suas datas;
+buscar um tema mostra os formadores que o ministraram.
+
+### Como foi feita
+- O histórico é consultado a partir das formações com situação `realizada`, usando
+  tema, formador e data já registrados; cada formação é uma ocorrência histórica.
+- O filtro comum de formações realizadas é reutilizado pela consulta existente da
+  T007.1 e pelas duas novas consultas. Formadores inativos continuam elegíveis.
+- A tela oferece buscas GET independentes por formador e por tema, exibindo cada
+  ocorrência em ordem cronológica decrescente. O middleware de login permite o
+  acesso dos dois perfis; os links estão na home de cada um.
+- Nenhum campo ou migration é necessário.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T012.1 Consultas de histórico por formador e tema | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
+| T012.2 Tela de histórico com as duas modalidades de busca | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/historico.html`, `acesso/templates/acesso/home.html` |
+| T012.3 Testes das consultas, tela e permissões | Feita (9 testes novos) | `cronograma/tests/test_historico.py` |
+
+### Mudanças em relação ao plano
+- Nenhuma até o momento.
+
+### Validação
+- `python manage.py check` não acusou problemas e `python manage.py test` passou
+  com 192 testes.
+- `python manage.py makemigrations --check --dry-run` não encontrou mudanças.
+
+
 ## US016 — Exportar o cronograma do mês
 
 **Responsável:** Murilo · **Sprint:** 2 · **RF:** RF016 · **Situação:** em andamento
