@@ -429,10 +429,18 @@ situação entre prevista, realizada e cancelada, para manter o cronograma atual
 | T007.1 Implementar escalação de formador | Feita (commit `ad0394e`) | `cronograma/services.py`, `cronograma/repositories.py`, `cronograma/forms.py`, `cronograma/views.py`, `cronograma/templates/cronograma/` |
 | T007.2 Serviço de alteração de situação | Feita | `cronograma/services.py` |
 | T007.3 Alteração de situação pelo cronograma | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cronograma.html` |
-| T007.4 Testes da US007 | Pendente | `cronograma/tests/test_formacao.py` |
+| T007.4 Testes da US007 | Feita (8 testes novos) | `cronograma/tests/test_formacao.py` |
 
 ### Mudanças em relação ao plano
-- Nenhuma até o momento.
+- Os testes já existentes da T007.1 cobrem escalação de formador ativo, recusa de
+  formador inativo, proteção contra substituição e atualização do cronograma; não
+  foram duplicados.
+
+### Validação
+- `python manage.py check` não acusou problemas e `python manage.py test` passou
+  com 183 testes.
+- `python manage.py makemigrations --check --dry-run` não encontrou mudanças; a
+  US007 não precisa de migração.
 
 
 

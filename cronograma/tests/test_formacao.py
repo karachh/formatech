@@ -3,7 +3,7 @@ from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.test import SimpleTestCase, TestCase
+from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 
 from acesso.models import Usuario
@@ -216,6 +216,27 @@ class ServicoEscalacaoTests(ComDados, TestCase):
         self.assertIsNone(formacao.formador)
 
 
+class ServicoSituacaoTests(ComDados, TestCase):
+    def test_altera_para_todas_as_situacoes_validas(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        for situacao in Formacao.Situacao.values:
+            with self.subTest(situacao=situacao):
+                resultado = services.alterar_situacao(formacao.pk, situacao)
+                self.assertEqual(resultado.situacao, situacao)
+                formacao.refresh_from_db()
+                self.assertEqual(formacao.situacao, situacao)
+
+    def test_recusa_situacao_invalida_sem_alterar_a_formacao(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        with self.assertRaises(ValidationError):
+            services.alterar_situacao(formacao.pk, "adiada")
+
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.situacao, Formacao.Situacao.PREVISTA)
+
+
 class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
     def agendar(self, **campos):
         dados = {
@@ -365,3 +386,69 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
         self.assertEqual(self.client.get(URL).status_code, 302)
         self.assertEqual(self.client.post(URL, {"data": "2027-03-06"}).status_code, 302)
         self.assertFalse(Formacao.objects.exists())
+
+
+class AlterarSituacaoCronogramaTests(ComoCoordenador, ComDados, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.encontro = self.formacao(date(2027, 3, 6))
+        self.url = reverse("cronograma:alterar_situacao", args=[self.encontro.pk])
+
+    def test_post_altera_situacao_e_atualiza_cronograma(self):
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA}, follow=True)
+
+        self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
+        self.assertContains(resposta, "Situação alterada para Realizada.")
+        self.assertContains(resposta, "<td>Realizada</td>", html=True)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.REALIZADA)
+
+    def test_situacao_invalida_nao_altera_a_formacao(self):
+        resposta = self.client.post(self.url, {"situacao": "adiada"}, follow=True)
+
+        self.assertContains(resposta, "Selecione uma situação válida.")
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_formador_nao_pode_alterar_situacao(self):
+        usuario = Usuario.objects.create_user(
+            username="form", password="x", perfil=Usuario.Perfil.FORMADOR
+        )
+        self.client.force_login(usuario)
+
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+
+        self.assertEqual(resposta.status_code, 403)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_anonimo_e_redirecionado_ao_tentar_alterar_situacao(self):
+        self.client.logout()
+
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+
+        self.assertEqual(resposta.status_code, 302)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_alteracao_de_situacao_aceita_apenas_post(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_alteracao_de_situacao_exige_csrf(self):
+        cliente = Client(enforce_csrf_checks=True)
+        cliente.force_login(Usuario.objects.get(username="coord"))
+        cliente.get(URL, {"ciclo": self.ciclo.pk})
+        token = cliente.cookies["csrftoken"].value
+
+        resposta_sem_token = cliente.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+        self.assertEqual(resposta_sem_token.status_code, 403)
+
+        resposta_com_token = cliente.post(
+            self.url,
+            {"situacao": Formacao.Situacao.REALIZADA},
+            HTTP_X_CSRFTOKEN=token,
+            follow=True,
+        )
+        self.assertRedirects(resposta_com_token, f"{URL}?ciclo={self.ciclo.pk}")
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.REALIZADA)
