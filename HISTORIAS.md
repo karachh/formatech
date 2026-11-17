@@ -407,6 +407,33 @@ visíveis.
   `python manage.py migrate`.
 
 
+## US007 — Escalar formador e alterar situação da formação
+
+**Responsável:** Bruno · **Sprint:** 2 · **Situação:** em desenvolvimento (branch `us007-escalar-formador`)
+
+### O que faz
+Como coordenador, quero escalar um formador para uma formação e alterar sua
+situação entre prevista, realizada e cancelada, para manter o cronograma atualizado.
+
+### Como foi feita
+- A escalação usa os serviços e repositórios do cronograma, oferecendo formadores
+  ativos e impedindo substituir um formador já escalado. A consulta de temas
+  ministrados e carga do ciclo é informativa; cancelar formações não conta na carga.
+- A alteração da situação valida no serviço os três valores definidos pelo modelo
+  e persiste pelo repositório, sem introduzir migração.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T007.1 Implementar escalação de formador | Feita (commit `ad0394e`) | `cronograma/services.py`, `cronograma/repositories.py`, `cronograma/forms.py`, `cronograma/views.py`, `cronograma/templates/cronograma/` |
+| T007.2 Serviço de alteração de situação | Feita | `cronograma/services.py` |
+| T007.3 Alteração de situação pelo cronograma | Pendente | — |
+| T007.4 Testes da US007 | Pendente | `cronograma/tests/test_formacao.py` |
+
+### Mudanças em relação ao plano
+- Nenhuma até o momento.
+
+
 
 
 ---

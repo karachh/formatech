@@ -91,6 +91,15 @@ def escalar_formador(formacao_id, formador_id):
     return repositories.salvar_formacao(formacao)
 
 
+def alterar_situacao(formacao_id, situacao):
+    """Altera a situação da formação para um dos valores previstos no domínio."""
+    if situacao not in Formacao.Situacao.values:
+        raise ValidationError({"situacao": "Selecione uma situação válida."})
+    formacao = repositories.buscar_formacao(formacao_id)
+    formacao.situacao = situacao
+    return repositories.salvar_formacao(formacao)
+
+
 def _buscar_formacao_sem_formador(formacao_id):
     formacao = repositories.buscar_formacao(formacao_id)
     if formacao.formador_id is not None:
