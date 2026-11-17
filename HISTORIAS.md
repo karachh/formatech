@@ -525,7 +525,7 @@ buscar um tema mostra os formadores que o ministraram.
 | Tarefa | Situação | Onde |
 |---|---|---|
 | T012.1 Consultas de histórico por formador e tema | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
-| T012.2 Tela de histórico com as duas modalidades de busca | Pendente | — |
+| T012.2 Tela de histórico com as duas modalidades de busca | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/historico.html`, `acesso/templates/acesso/home.html` |
 | T012.3 Testes das consultas, tela e permissões | Pendente | `cronograma/tests/` |
 
 ### Mudanças em relação ao plano

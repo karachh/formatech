@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Histórico de temas · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Histórico de temas</h1>
+
+<section>
+  <h2>Temas ministrados por formador</h2>
+  <form method="get">
+    {{ formador_form.as_p }}
+    <button type="submit">Buscar temas</button>
+  </form>
+
+  {% if formador %}
+    <h3>Temas ministrados por {{ formador.nome }}</h3>
+    {% if historico_temas %}
+      <table>
+        <thead><tr><th>Data</th><th>Tema</th></tr></thead>
+        <tbody>
+          {% for formacao in historico_temas %}
+            <tr>
+              <td>{{ formacao.data|date:"d/m/Y" }}</td>
+              <td>{{ formacao.tema.nome }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ formador.nome }} ainda não ministrou temas em formações realizadas.</p>
+    {% endif %}
+  {% endif %}
+</section>
+
+<section>
+  <h2>Formadores que ministraram um tema</h2>
+  <form method="get">
+    {{ tema_form.as_p }}
+    <button type="submit">Buscar formadores</button>
+  </form>
+
+  {% if tema %}
+    <h3>Formadores que ministraram {{ tema.nome }}</h3>
+    {% if historico_formadores %}
+      <table>
+        <thead><tr><th>Data</th><th>Formador</th></tr></thead>
+        <tbody>
+          {% for formacao in historico_formadores %}
+            <tr>
+              <td>{{ formacao.data|date:"d/m/Y" }}</td>
+              <td>{{ formacao.formador.nome }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nenhum formador ministrou este tema em formações realizadas.</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}
