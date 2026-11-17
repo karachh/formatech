@@ -519,6 +519,9 @@ buscar um tema mostra os formadores que o ministraram.
   tema, formador e data já registrados; cada formação é uma ocorrência histórica.
 - O filtro comum de formações realizadas é reutilizado pela consulta existente da
   T007.1 e pelas duas novas consultas. Formadores inativos continuam elegíveis.
+- A tela oferece buscas GET independentes por formador e por tema, exibindo cada
+  ocorrência em ordem cronológica decrescente. O middleware de login permite o
+  acesso dos dois perfis; os links estão na home de cada um.
 - Nenhum campo ou migration é necessário.
 
 ### Tarefas
@@ -526,10 +529,15 @@ buscar um tema mostra os formadores que o ministraram.
 |---|---|---|
 | T012.1 Consultas de histórico por formador e tema | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
 | T012.2 Tela de histórico com as duas modalidades de busca | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/historico.html`, `acesso/templates/acesso/home.html` |
-| T012.3 Testes das consultas, tela e permissões | Pendente | `cronograma/tests/` |
+| T012.3 Testes das consultas, tela e permissões | Feita (9 testes novos) | `cronograma/tests/test_historico.py` |
 
 ### Mudanças em relação ao plano
 - Nenhuma até o momento.
+
+### Validação
+- `python manage.py check` não acusou problemas e `python manage.py test` passou
+  com 192 testes.
+- `python manage.py makemigrations --check --dry-run` não encontrou mudanças.
 
 
 ## US016 — Exportar o cronograma do mês
