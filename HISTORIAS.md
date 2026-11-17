@@ -330,9 +330,10 @@ preserva o registro, e a exclusão a pedido o apaga.
   mensagem na página final.
 
 ### Pendências
-- O critério "imediatamente disponível na grade de presença" só pode ser verificado
-  quando o módulo Presença existir. A consulta que a grade vai usar já está pronta
-  (`listar_perseverantes_ativos`).
+- ~~O critério "imediatamente disponível na grade de presença" só pode ser verificado
+  quando o módulo Presença existir.~~ Resolvida na US014: a grade usa
+  `listar_perseverantes_ativos`, e o teste `test_lista_os_ativos_do_ciclo_com_presente_marcado`
+  confirma que um perseverante ativo do ciclo aparece na grade.
 
 ---
 
@@ -538,6 +539,72 @@ buscar um tema mostra os formadores que o ministraram.
 - `python manage.py check` não acusou problemas e `python manage.py test` passou
   com 192 testes.
 - `python manage.py makemigrations --check --dry-run` não encontrou mudanças.
+
+---
+
+## US014 — Lançar presença em lote
+
+**Responsável:** Cauã · **Sprint:** 2 · **RF:** RF014 · **Situação:** em desenvolvimento (branch `us014-presenca-em-lote`)
+
+### O que faz
+Como coordenador, quero marcar a presença de toda a turma de um encontro em uma única
+tela e gravar tudo de uma vez, para não perder tempo lançando perseverante por perseverante.
+
+Critérios de aceitação: escolhida uma formação, a tela lista todos os perseverantes do
+ciclo com "presente" marcado por padrão; marcar as exceções e confirmar grava o
+encontro inteiro de uma vez; reabrir a mesma formação mostra as marcações já salvas,
+permitindo corrigir. A gravação é atômica: se uma linha falhar, nenhuma é salva (NFR001).
+
+### Como foi feita
+- Nova app `presenca`, o primeiro model do módulo Presença. `Presenca` herda de
+  `RegistroBase` (RN008) e tem formação, perseverante e situação
+  (presente/ausente/justificado, os mesmos valores do `banco/schema.sql` do seminário).
+- Restrições no banco: `presenca_unica_por_formacao` (UNIQUE formação + perseverante)
+  impede duas linhas da mesma pessoa no mesmo encontro, e o CHECK
+  `presenca_situacao_valida` impede outro valor gravado por fora.
+- FKs: `perseverante` usa `CASCADE`, como a US004 decidiu (a exclusão a pedido da
+  NFC002 apaga as presenças). `formacao` usa `PROTECT`: não se apaga uma formação com
+  presença lançada.
+- A grade é calculada, não armazenada (RN006): os perseverantes **ativos** do ciclo da
+  formação, sendo o ciclo derivado da data (RN002). Cada um vem com a situação já salva
+  ou, se ainda não houver, com "presente".
+- Gravação em lote (`repositories.salvar_presencas`): um `update_or_create` por
+  perseverante dentro de um único `transaction.atomic()` (NFR001). Na primeira vez cria
+  as linhas; na reabertura corrige as existentes, sem duplicar.
+- O serviço (`lancar_presencas`) recusa perseverante que não está na grade (inativo ou
+  de outro ciclo) e situação inválida antes de chegar ao banco. Os dados vêm de um POST
+  e podem ser adulterados.
+- A presença acessa formação e perseverantes pelos serviços de `cronograma` e
+  `cadastros`, sem usar o ORM de outra app.
+- A tela (`/presenca/<id>/`) é só do coordenador e tem um rádio por perseverante.
+  Depois de gravar, volta para a mesma tela, que já mostra o que foi salvo. A formação é
+  escolhida pelo link "Presença" em cada linha do cronograma; o link "Presença" da home
+  passou a levar ao cronograma.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T014.1 Criar o model Presenca (formação, perseverante, situação) com UNIQUE(formação, perseverante) + migration | Feita | `presenca/models.py`, `presenca/migrations/0001_initial.py`, `presenca/admin.py`, `config/settings.py` |
+| T014.2 Criar tela em grade com todos os perseverantes ativos e "presente" marcado por padrão | Feita | `presenca/services.py` (`grade_de_presenca`), `presenca/forms.py`, `presenca/views.py`, `presenca/urls.py`, `presenca/templates/presenca/lancar_presenca.html`, `config/urls.py`, `cronograma/templates/cronograma/cronograma.html`, `acesso/templates/acesso/home.html` |
+| T014.3 Criar serviço de gravação em lote dentro de uma transação atômica (NFR001) | Feita | `presenca/services.py` (`lancar_presencas`), `presenca/repositories.py` (`salvar_presencas`) |
+| T014.4 Reabrir formação já lançada trazendo as marcações salvas, permitindo correção | Feita | `presenca/repositories.py` (`situacoes_da_formacao`, `update_or_create`) |
+| T014.5 Testes: uma linha por perseverante; falha simulada não grava nenhuma linha | Feita (20 testes) | `presenca/tests/test_presenca.py` |
+
+### Mudanças em relação ao plano
+- A falha da T014.5 é simulada com uma situação inválida no meio do lote: o CHECK do
+  banco recusa essa linha, e o teste confere que as linhas anteriores também foram
+  desfeitas. Sem o `atomic()`, os dois testes de falha quebram (verificado).
+- Decisão nossa, não especificada: só perseverantes **ativos** entram na grade. Quem
+  for inativado depois de ter presença lançada continua com a presença salva no banco,
+  mas some da grade.
+- Decisão nossa, não especificada: a tela não bloqueia formação `cancelada` nem
+  `prevista`. O cartão não pede esse bloqueio.
+
+### Validação
+- Em 17/11/2026, `python manage.py check` não acusou problemas e `python manage.py test`
+  passou com 212 testes (20 novos).
+- Migração nova: `presenca/migrations/0001_initial.py`. Quem baixar a branch precisa
+  rodar `python manage.py migrate`.
 
 
 ## US016 — Exportar o cronograma do mês

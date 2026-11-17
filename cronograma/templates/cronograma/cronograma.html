@@ -33,6 +33,7 @@
             <td>{{ formacao.get_situacao_display }}</td>
             <td>
               <a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a>
+              · <a href="{% url 'presenca:lancar_presenca' formacao.id %}">Presença</a>
               {% if not formacao.formador %}
                 · <a href="{% url 'cronograma:escalar_formador' formacao.id %}">Escalar formador</a>
               {% endif %}

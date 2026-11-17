@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'acesso',
     'cadastros',
     'cronograma',
+    'presenca',
 ]
 
 AUTH_USER_MODEL = 'acesso.Usuario'
