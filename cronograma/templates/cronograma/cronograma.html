@@ -31,7 +31,21 @@
             <td>{{ formacao.tema.nome|default:"Sem tema" }}</td>
             <td>{{ formacao.formador.nome|default:"A escalar" }}</td>
             <td>{{ formacao.get_situacao_display }}</td>
-            <td><a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a></td>
+            <td>
+              <a href="{% url 'cronograma:editar_formacao' formacao.id %}">Editar</a>
+              {% if not formacao.formador %}
+                · <a href="{% url 'cronograma:escalar_formador' formacao.id %}">Escalar formador</a>
+              {% endif %}
+              <form method="post" action="{% url 'cronograma:alterar_situacao' formacao.id %}">
+                {% csrf_token %}
+                <select name="situacao" aria-label="Nova situação para formação de {{ formacao.data|date:'d/m/Y' }}">
+                  {% for valor, rotulo in situacoes %}
+                    <option value="{{ valor }}" {% if formacao.situacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Atualizar situação</button>
+              </form>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

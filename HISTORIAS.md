@@ -407,6 +407,42 @@ visíveis.
   `python manage.py migrate`.
 
 
+## US007 — Escalar formador e alterar situação da formação
+
+**Responsável:** Bruno · **Sprint:** 2 · **Situação:** em desenvolvimento (branch `us007-escalar-formador`)
+
+### O que faz
+Como coordenador, quero escalar um formador para uma formação e alterar sua
+situação entre prevista, realizada e cancelada, para manter o cronograma atualizado.
+
+### Como foi feita
+- A escalação usa os serviços e repositórios do cronograma, oferecendo formadores
+  ativos e impedindo substituir um formador já escalado. A consulta de temas
+  ministrados e carga do ciclo é informativa; cancelar formações não conta na carga.
+- A alteração da situação valida no serviço os três valores definidos pelo modelo
+  e persiste pelo repositório, sem introduzir migração. No cronograma, a ação usa
+  formulário POST com CSRF e é restrita ao coordenador.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T007.1 Implementar escalação de formador | Feita (commit `ad0394e`) | `cronograma/services.py`, `cronograma/repositories.py`, `cronograma/forms.py`, `cronograma/views.py`, `cronograma/templates/cronograma/` |
+| T007.2 Serviço de alteração de situação | Feita | `cronograma/services.py` |
+| T007.3 Alteração de situação pelo cronograma | Feita | `cronograma/forms.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cronograma.html` |
+| T007.4 Testes da US007 | Feita (8 testes novos) | `cronograma/tests/test_formacao.py` |
+
+### Mudanças em relação ao plano
+- Os testes já existentes da T007.1 cobrem escalação de formador ativo, recusa de
+  formador inativo, proteção contra substituição e atualização do cronograma; não
+  foram duplicados.
+
+### Validação
+- `python manage.py check` não acusou problemas e `python manage.py test` passou
+  com 183 testes.
+- `python manage.py makemigrations --check --dry-run` não encontrou mudanças; a
+  US007 não precisa de migração.
+
+
 
 
 ---

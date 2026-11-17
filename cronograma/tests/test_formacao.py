@@ -3,7 +3,7 @@ from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.test import SimpleTestCase, TestCase
+from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 
 from acesso.models import Usuario
@@ -64,6 +64,32 @@ class RepositorioFormacaoTests(ComDados, TestCase):
         self.assertEqual(
             repositories.listar_formacoes_do_ciclo(self.ciclo),
             [primeiro_dia, meio, ultimo_dia],
+        )
+
+    def test_lista_temas_ministrados_considera_formacoes_realizadas(self):
+        outro_tema = Tema.objects.create(nome="Oração", tipo=Tema.Tipo.APOSTILA, rotulo="2")
+        self.formacao(date(2026, 3, 6), tema=self.tema, formador=self.formador,
+                      situacao=Formacao.Situacao.REALIZADA)
+        self.formacao(date(2026, 4, 6), tema=outro_tema, formador=self.formador,
+                      situacao=Formacao.Situacao.PREVISTA)
+        self.formacao(date(2026, 5, 6), tema=outro_tema, situacao=Formacao.Situacao.REALIZADA)
+
+        self.assertEqual(
+            repositories.listar_temas_ministrados_por_formador(self.formador.pk),
+            ["Sagrada Tradição"],
+        )
+
+    def test_carga_no_ciclo_conta_formacoes_nao_canceladas(self):
+        self.formacao(date(2027, 3, 6), formador=self.formador)
+        self.formacao(date(2027, 4, 6), formador=self.formador,
+                      situacao=Formacao.Situacao.REALIZADA)
+        self.formacao(date(2027, 5, 6), formador=self.formador,
+                      situacao=Formacao.Situacao.CANCELADA)
+        self.formacao(date(2028, 3, 6), formador=self.formador)
+
+        self.assertEqual(
+            repositories.contar_formacoes_do_formador_no_ciclo(self.formador.pk, self.ciclo),
+            2,
         )
 
 
@@ -158,6 +184,59 @@ class ServicoFormacaoTests(SimpleTestCase):
         self.assertEqual(editada.situacao, Formacao.Situacao.REALIZADA)
 
 
+class ServicoEscalacaoTests(ComDados, TestCase):
+    def test_escala_formador_ativo_em_formacao_sem_formador(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        resultado = services.escalar_formador(formacao.pk, str(self.formador.pk))
+
+        self.assertEqual(resultado.formador, self.formador)
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.formador, self.formador)
+
+    def test_nao_substitui_formador_ja_escalado(self):
+        formacao = self.formacao(date(2027, 3, 6), formador=self.formador)
+
+        with self.assertRaises(ValidationError):
+            services.escalar_formador(formacao.pk, self.formador.pk)
+
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.formador, self.formador)
+
+    def test_nao_escala_formador_inativo(self):
+        inativo = Formador.objects.create(
+            nome="Bruno", inicio_servico=date(2020, 1, 10), capacitado=True, ativo=False
+        )
+        formacao = self.formacao(date(2027, 3, 6))
+
+        with self.assertRaises(ValidationError):
+            services.escalar_formador(formacao.pk, inativo.pk)
+
+        formacao.refresh_from_db()
+        self.assertIsNone(formacao.formador)
+
+
+class ServicoSituacaoTests(ComDados, TestCase):
+    def test_altera_para_todas_as_situacoes_validas(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        for situacao in Formacao.Situacao.values:
+            with self.subTest(situacao=situacao):
+                resultado = services.alterar_situacao(formacao.pk, situacao)
+                self.assertEqual(resultado.situacao, situacao)
+                formacao.refresh_from_db()
+                self.assertEqual(formacao.situacao, situacao)
+
+    def test_recusa_situacao_invalida_sem_alterar_a_formacao(self):
+        formacao = self.formacao(date(2027, 3, 6))
+
+        with self.assertRaises(ValidationError):
+            services.alterar_situacao(formacao.pk, "adiada")
+
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.situacao, Formacao.Situacao.PREVISTA)
+
+
 class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
     def agendar(self, **campos):
         dados = {
@@ -218,6 +297,15 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
 
         self.assertNotContains(self.client.get(URL), "Bruno")
 
+    def test_formacao_sem_formador_oferece_acao_de_escalacao(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        resposta = self.client.get(URL, {"ciclo": self.ciclo.pk})
+
+        self.assertContains(
+            resposta,
+            reverse("cronograma:escalar_formador", args=[formacao.pk]),
+        )
+
     def test_escolha_de_tema_separa_apostila_e_opcionais(self):
         Tema.objects.create(nome="Retiro de Carnaval", tipo=Tema.Tipo.OPCIONAL)
 
@@ -246,6 +334,39 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
         self.assertEqual(formacao.descricao, "Retiro")
         self.assertEqual(formacao.formador, self.formador)
 
+    def test_consulta_exibe_temas_realizados_e_carga_do_ciclo(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        self.formacao(
+            date(2026, 3, 6),
+            tema=self.tema,
+            formador=self.formador,
+            situacao=Formacao.Situacao.REALIZADA,
+        )
+        self.formacao(date(2027, 4, 6), formador=self.formador)
+        self.formacao(
+            date(2027, 5, 6),
+            formador=self.formador,
+            situacao=Formacao.Situacao.CANCELADA,
+        )
+        url = reverse("cronograma:escalar_formador", args=[formacao.pk])
+
+        resposta = self.client.get(url, {"formador_id": self.formador.pk})
+
+        self.assertContains(resposta, "Sagrada Tradição")
+        self.assertContains(resposta, "Carga no ciclo: 1 formação.")
+        self.assertContains(resposta, "Escalar formador")
+
+    def test_escalacao_pelo_fluxo_atualiza_cronograma(self):
+        formacao = self.formacao(date(2027, 3, 6))
+        url = reverse("cronograma:escalar_formador", args=[formacao.pk])
+
+        resposta = self.client.post(url, {"formador_id": self.formador.pk}, follow=True)
+
+        self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
+        self.assertContains(resposta, "<td>Ana</td>", html=True)
+        formacao.refresh_from_db()
+        self.assertEqual(formacao.formador, self.formador)
+
     def test_editar_inexistente_da_404(self):
         url = reverse("cronograma:editar_formacao", args=[999_999])
         self.assertEqual(self.client.get(url).status_code, 404)
@@ -265,3 +386,69 @@ class TelaCronogramaTests(ComoCoordenador, ComDados, TestCase):
         self.assertEqual(self.client.get(URL).status_code, 302)
         self.assertEqual(self.client.post(URL, {"data": "2027-03-06"}).status_code, 302)
         self.assertFalse(Formacao.objects.exists())
+
+
+class AlterarSituacaoCronogramaTests(ComoCoordenador, ComDados, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.encontro = self.formacao(date(2027, 3, 6))
+        self.url = reverse("cronograma:alterar_situacao", args=[self.encontro.pk])
+
+    def test_post_altera_situacao_e_atualiza_cronograma(self):
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA}, follow=True)
+
+        self.assertRedirects(resposta, f"{URL}?ciclo={self.ciclo.pk}")
+        self.assertContains(resposta, "Situação alterada para Realizada.")
+        self.assertContains(resposta, "<td>Realizada</td>", html=True)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.REALIZADA)
+
+    def test_situacao_invalida_nao_altera_a_formacao(self):
+        resposta = self.client.post(self.url, {"situacao": "adiada"}, follow=True)
+
+        self.assertContains(resposta, "Selecione uma situação válida.")
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_formador_nao_pode_alterar_situacao(self):
+        usuario = Usuario.objects.create_user(
+            username="form", password="x", perfil=Usuario.Perfil.FORMADOR
+        )
+        self.client.force_login(usuario)
+
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+
+        self.assertEqual(resposta.status_code, 403)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_anonimo_e_redirecionado_ao_tentar_alterar_situacao(self):
+        self.client.logout()
+
+        resposta = self.client.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+
+        self.assertEqual(resposta.status_code, 302)
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.PREVISTA)
+
+    def test_alteracao_de_situacao_aceita_apenas_post(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_alteracao_de_situacao_exige_csrf(self):
+        cliente = Client(enforce_csrf_checks=True)
+        cliente.force_login(Usuario.objects.get(username="coord"))
+        cliente.get(URL, {"ciclo": self.ciclo.pk})
+        token = cliente.cookies["csrftoken"].value
+
+        resposta_sem_token = cliente.post(self.url, {"situacao": Formacao.Situacao.REALIZADA})
+        self.assertEqual(resposta_sem_token.status_code, 403)
+
+        resposta_com_token = cliente.post(
+            self.url,
+            {"situacao": Formacao.Situacao.REALIZADA},
+            HTTP_X_CSRFTOKEN=token,
+            follow=True,
+        )
+        self.assertRedirects(resposta_com_token, f"{URL}?ciclo={self.ciclo.pk}")
+        self.encontro.refresh_from_db()
+        self.assertEqual(self.encontro.situacao, Formacao.Situacao.REALIZADA)

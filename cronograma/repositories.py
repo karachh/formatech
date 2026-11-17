@@ -20,6 +20,30 @@ def salvar_formacao(formacao):
     return formacao
 
 
+def listar_temas_ministrados_por_formador(formador_id):
+    return list(
+        Formacao.objects.filter(
+            formador_id=formador_id,
+            situacao=Formacao.Situacao.REALIZADA,
+            tema__isnull=False,
+        )
+        .values_list("tema__nome", flat=True)
+        .distinct()
+        .order_by("tema__nome")
+    )
+
+
+def contar_formacoes_do_formador_no_ciclo(formador_id, ciclo):
+    return (
+        Formacao.objects.filter(
+            formador_id=formador_id,
+            data__range=(ciclo.inicio, ciclo.fim),
+        )
+        .exclude(situacao=Formacao.Situacao.CANCELADA)
+        .count()
+    )
+
+
 def listar_temas_da_apostila():
     return list(Tema.objects.filter(tipo=Tema.Tipo.APOSTILA).order_by("rotulo", "nome"))
 
