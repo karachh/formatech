@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Presença · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Presença</h1>
+<p>Formação de {{ formacao.data|date:"d/m/Y" }} · {{ formacao.tema.nome|default:"Sem tema" }}</p>
+
+{% if form.fields %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <table>
+      <thead><tr><th>Perseverante</th><th>Situação</th></tr></thead>
+      <tbody>
+        {% for campo in form %}
+          <tr>
+            <td>{{ campo.label }}</td>
+            <td>{{ campo.errors }}{{ campo }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><small>Quem ainda não tem presença lançada aparece como presente: marque só as exceções.</small></p>
+    <button type="submit">Gravar presença</button>
+  </form>
+{% else %}
+  <p>Nenhum perseverante ativo no ciclo desta formação.</p>
+{% endif %}
+
+<p><a href="{% url 'cronograma:cronograma' %}">Voltar ao cronograma</a></p>
+{% endblock %}
