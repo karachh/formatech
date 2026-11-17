@@ -20,16 +20,35 @@ def salvar_formacao(formacao):
     return formacao
 
 
+def _formacoes_realizadas():
+    return Formacao.objects.filter(situacao=Formacao.Situacao.REALIZADA)
+
+
 def listar_temas_ministrados_por_formador(formador_id):
     return list(
-        Formacao.objects.filter(
-            formador_id=formador_id,
-            situacao=Formacao.Situacao.REALIZADA,
-            tema__isnull=False,
-        )
+        _formacoes_realizadas()
+        .filter(formador_id=formador_id, tema__isnull=False)
         .values_list("tema__nome", flat=True)
         .distinct()
         .order_by("tema__nome")
+    )
+
+
+def listar_historico_temas_por_formador(formador_id):
+    return list(
+        _formacoes_realizadas()
+        .filter(formador_id=formador_id, tema__isnull=False)
+        .select_related("tema")
+        .order_by("-data", "-pk")
+    )
+
+
+def listar_historico_formadores_por_tema(tema_id):
+    return list(
+        _formacoes_realizadas()
+        .filter(tema_id=tema_id, formador__isnull=False)
+        .select_related("formador")
+        .order_by("-data", "-pk")
     )
 
 
