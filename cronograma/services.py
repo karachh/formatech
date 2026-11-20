@@ -209,3 +209,10 @@ def exportar_cronograma_do_mes(ano, mes):
     if not formacoes:
         return f"Cronograma de {titulo}\n\nNenhuma formação neste mês."
     return ExportadorTexto().exportar(titulo, formacoes)
+
+
+
+def carga_por_formador(ciclo):
+    totais = repositories.contar_formacoes_por_formador(ciclo)
+    carga = [(formador, totais.get(formador.pk, 0)) for formador in listar_formadores_ativos()]
+    return sorted(carga, key=lambda par: (-par[1], par[0].nome))

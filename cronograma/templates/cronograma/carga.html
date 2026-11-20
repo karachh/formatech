@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Carga por formador · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Carga de formações por formador</h1>
+
+<form method="get">
+  <label for="ciclo">Ciclo</label>
+  <select name="ciclo" id="ciclo">
+    {% for c in ciclos %}
+      <option value="{{ c.id }}" {% if ciclo and c.id == ciclo.id %}selected{% endif %}>{{ c.nome }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Ver</button>
+</form>
+
+{% if not ciclo %}
+  <p>Não há ciclo para exibir. Escolha um ciclo.</p>
+{% else %}
+  <h2>{{ ciclo.nome }}</h2>
+  {% if carga %}
+    <table>
+      <thead><tr><th>Formador</th><th>Formações ministradas</th></tr></thead>
+      <tbody>
+        {% for formador, total in carga %}
+          <tr><td>{{ formador.nome }}</td><td>{{ total }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Nenhum formador ativo cadastrado.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

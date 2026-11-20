@@ -189,3 +189,13 @@ def exportar(request):
     ano, mes = services.mes_da_exportacao(request.GET.get("mes"))
     texto = services.exportar_cronograma_do_mes(ano, mes)
     return render(request, "cronograma/exportar.html", {"mes": f"{ano:04d}-{mes:02d}", "texto": texto})
+
+
+@coordenador_required
+def carga(request):
+    ciclos = services.listar_ciclos()
+    ciclo = services.ciclo_do_cronograma(request.GET.get("ciclo") or None)
+    contexto = {"ciclos": ciclos, "ciclo": ciclo, "carga": None}
+    if ciclo is not None:
+        contexto["carga"] = services.carga_por_formador(ciclo)
+    return render(request, "cronograma/carga.html", contexto)
