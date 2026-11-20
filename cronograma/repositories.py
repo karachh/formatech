@@ -1,5 +1,6 @@
 from cadastros.models import Tema
 from .models import Formacao
+from django.db.models import Count
 
 
 def listar_formacoes_do_ciclo(ciclo):
@@ -83,3 +84,15 @@ def listar_formacoes_do_mes(ano, mes):
         .select_related("tema", "formador")
         .order_by("data", "id")
     )
+
+def contar_formacoes_por_formador(ciclo):
+    linhas = (
+        Formacao.objects.filter(
+            data__range=(ciclo.inicio, ciclo.fim),
+            situacao=Formacao.Situacao.REALIZADA,
+            formador__isnull=False,
+        )
+        .values("formador_id")
+        .annotate(total=Count("id"))
+    )
+    return {linha["formador_id"]: linha["total"] for linha in linhas}

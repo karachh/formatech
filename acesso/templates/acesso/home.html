@@ -21,6 +21,7 @@
       <li><a href="{% url 'cadastros:temas' %}">Temas</a></li>
       <li><a href="{% url 'cronograma:cronograma' %}">Presença</a> <small>(escolha a formação no cronograma)</small></li>
       <li><a href="{% url 'cronograma:historico' %}">Histórico de temas</a></li>
+      <li><a href="{% url 'cronograma:carga' %}">Carga por formador</a></li>
       <li><a href="{% url 'cronograma:exportar' %}">Exportação</a></li>
     {% else %}
       <li><a href="{% url 'cronograma:historico' %}">Temas que já ministrei</a></li>

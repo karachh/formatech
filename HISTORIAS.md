@@ -655,3 +655,45 @@ canceladas não aparecem no texto exportado.
   enquanto; nenhuma tela altera a situação.
 - O botão "Copiar" só funciona em `localhost` ou HTTPS, por exigência do
   `navigator.clipboard`.
+
+
+  
+---
+
+## US013 — Consultar carga de formações por formador
+
+**Responsável:** Murilo · **Sprint:** 3 · **RF:** RF013 · **Situação:** finalizada
+
+### O que faz
+Como coordenador, quero ver quantas formações cada formador já ministrou no ciclo,
+para distribuir a escala de forma mais equilibrada.
+
+Critérios de aceitação: selecionado um ciclo, a tela mostra quantas formações cada
+formador já ministrou nele.
+
+### Como foi feita
+- Não há model novo nem migração: a carga é sempre calculada a partir das formações
+  registradas e nunca armazenada (RN006).
+- A consulta agregada (`repositories.contar_formacoes_por_formador`) usa `COUNT` no
+  banco: filtra as formações do ciclo (data entre início e fim, RN002), só as
+  `realizadas` e com formador, agrupa por formador e devolve um dicionário
+  `{formador_id: total}`. É o único ponto que usa o ORM.
+- O serviço (`services.carga_por_formador`) combina essa contagem com os formadores
+  ativos (`listar_formadores_ativos`, de `cadastros`) e devolve a lista
+  `(formador, total)` do maior para o menor, com desempate por nome. Formador ativo
+  sem formação aparece com 0, o que ajuda a equilibrar a escala. O serviço não
+  recebe `request`.
+- A tela (`/carga/`) tem seletor de ciclo; sem escolha, usa o ciclo que contém o dia
+  de hoje (`ciclo_do_cronograma`).
+- A tela é só do coordenador (`@coordenador_required`): formador recebe 403 e anônimo
+  vai ao login. O link "Carga por formador" fica no menu do coordenador na home.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T013.1 Criar consulta agregada (COUNT) de formações por formador no ciclo, nunca armazenada (RN006) | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
+| T013.2 Criar tela de carga por formador com seleção de ciclo | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/carga.html`, `acesso/templates/acesso/home.html` |
+| T013.3 Testes da contagem | Feita (<<n>> testes) | `cronograma/tests/test_carga.py` |
+
+### Mudanças em relação ao plano
+-

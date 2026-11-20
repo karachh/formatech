@@ -12,4 +12,5 @@ urlpatterns = [
     path("cobertura/", views.cobertura, name="cobertura"),
     path("historico/", views.historico, name="historico"),
     path("exportar/", views.exportar, name="exportar"),
+    path("carga/", views.carga, name="carga"),
 ]
