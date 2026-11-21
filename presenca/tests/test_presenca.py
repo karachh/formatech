@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from acesso.models import Usuario
-from cadastros.models import Ciclo, Perseverante
+from cadastros.models import Ciclo, Perseverante, Tema
 from cadastros.tests.test_tela_ciclos import ComoCoordenador
 from cronograma.models import Formacao
 from presenca import repositories, services
@@ -162,3 +162,28 @@ class TelaPresencaTests(ComoCoordenador, ComTurma, TestCase):
     def test_anonimo_vai_para_o_login(self):
         self.client.logout()
         self.assertEqual(self.client.get(self.url).status_code, 302)
+
+
+class PresencaEmEncontroSemTemaTests(ComoCoordenador, ComTurma, TestCase):
+    """US017 (T017.2): encontro sem tema da apostila também recebe presença."""
+
+    def gravar(self):
+        dados = {f"perseverante_{p.pk}": "presente" for p in (self.ana, self.bia, self.caio)}
+        dados[f"perseverante_{self.bia.pk}"] = "ausente"
+        return self.client.post(self.url, dados, follow=True)
+
+    def test_encontro_sem_tema_identificado_pela_descricao(self):
+        self.formacao.descricao = "Oração"
+        self.formacao.save()
+
+        self.assertContains(self.client.get(self.url), "06/03/2027 · Oração")
+        self.gravar()
+        self.assertEqual(self.salvas(), {self.ana.pk: "presente", self.bia.pk: "ausente", self.caio.pk: "presente"})
+
+    def test_encontro_com_tema_opcional(self):
+        self.formacao.tema = Tema.objects.create(nome="Retiro de Carnaval", tipo=Tema.Tipo.OPCIONAL)
+        self.formacao.save()
+
+        self.assertContains(self.client.get(self.url), "06/03/2027 · Retiro de Carnaval")
+        self.gravar()
+        self.assertEqual(Presenca.objects.count(), 3)

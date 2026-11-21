@@ -4,7 +4,7 @@
 
 {% block conteudo %}
 <h1>Escalar formador</h1>
-<p>Formação de {{ formacao.data|date:"d/m/Y" }} · {{ formacao.tema.nome|default:"Sem tema" }}</p>
+<p>Formação de {{ formacao.data|date:"d/m/Y" }} · {{ formacao.titulo }}</p>
 
 <form method="get">
   {{ form.as_p }}

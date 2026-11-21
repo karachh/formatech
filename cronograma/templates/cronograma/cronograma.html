@@ -28,7 +28,7 @@
         {% for formacao in formacoes %}
           <tr>
             <td>{{ formacao.data|date:"d/m/Y" }}</td>
-            <td>{{ formacao.tema.nome|default:"Sem tema" }}</td>
+            <td>{{ formacao.titulo }}</td>
             <td>{{ formacao.formador.nome|default:"A escalar" }}</td>
             <td>{{ formacao.get_situacao_display }}</td>
             <td>
