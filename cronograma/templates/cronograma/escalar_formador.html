@@ -23,6 +23,13 @@
   </p>
   <p>Carga no ciclo: {{ dados.carga_formacoes }} formação{{ dados.carga_formacoes|pluralize }}.</p>
 
+  {% for aviso in dados.avisos %}
+    <p class="aviso">Aviso: {{ aviso.mensagem }}</p>
+  {% endfor %}
+  {% if dados.avisos %}
+    <p><small>O aviso não impede a escalação: confirme se quiser seguir mesmo assim.</small></p>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="formador_id" value="{{ form.cleaned_data.formador_id }}">
