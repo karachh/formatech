@@ -699,6 +699,36 @@ formador já ministrou nele.
 -
 ---
 
+<<<<<<< HEAD
+## US017 — Registrar encontro sem tema da apostila
+
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF017 · **Situação:** em andamento (branch `us017-encontro-sem-tema`)
+
+### O que faz
+Como coordenador, quero registrar encontros que não têm tema obrigatório (oração,
+dinâmica), para que esses encontros também apareçam no cronograma e recebam
+lançamento de presença.
+
+Critérios de aceitação:
+- Cadastrar uma formação sem tema da apostila (ou com tema opcional) faz ela aparecer
+  no cronograma e permite lançar presença nela.
+- Esse encontro não aparece na consulta de cobertura da apostila.
+
+### Como foi feita
+- **A maior parte já estava pronta nas histórias anteriores.** `Formacao.tema` aceita
+  ficar vazio e o formulário oferece "Sem tema" e "Temas opcionais" (US006). A cobertura
+  só considera temas `tipo=apostila` (US011). A presença não depende do tema (US014).
+  A US017 confirma isso com testes, sem model novo e sem migração.
+- **Lacuna encontrada:** um encontro sem tema aparecia como "Sem tema" no cronograma, na
+  presença, na escalação e no texto exportado, mesmo com a descrição preenchida. Com
+  isso, não dava para diferenciar uma oração de uma dinâmica.
+- Para resolver, `Formacao` ganhou a propriedade `titulo`: o nome do tema, senão a
+  descrição, senão "Sem tema". É calculada e não armazenada (RN006). Fica no modelo
+  para que as telas e a exportação usem a mesma regra, em vez de repetir o
+  `default:"Sem tema"` em cada template. O `__str__` também passou a usá-la.
+- O campo "Descrição" do formulário de formação ganhou um texto de ajuda sugerindo
+  usá-lo para encontros sem tema (ex.: Oração, Dinâmica).
+=======
 ## US008 — Receber avisos ao escalar um formador
 
 **Responsável:** Cauã · **Sprint:** 3 · **RF:** RF008 · **Situação:** em andamento (branch `us008-receber-avisos-ao-escalar-um-formador`)
@@ -732,10 +762,26 @@ Critérios de aceitação:
   (`dados_para_escalacao` passou a trazer `avisos`), com o botão "Escalar formador"
   disponível, e depois de gravar, como mensagem do tipo `warning` no cronograma. O
   `base.html` ganhou a classe `aviso` para essas mensagens.
+>>>>>>> 3dedf0b2933573c2c7fc0cb37e76fcdeef3d5352
 
 ### Tarefas
 | Tarefa | Situação | Onde |
 |---|---|---|
+
+| T017.1 Permitir tema em branco ou opcional no formulário de formação | Feita (já existia desde a US006; agora o encontro é identificado pela descrição) | `cronograma/models.py` (`titulo`), `cronograma/forms.py`, `cronograma/templates/cronograma/cronograma.html`, `cronograma/templates/cronograma/escalar_formador.html`, `cronograma/exportacao.py` |
+| T017.2 Garantir que esses encontros aceitem presença e fiquem fora da cobertura | Feita (sem mudança de regra; coberto por testes) | `presenca/templates/presenca/lancar_presenca.html` |
+| T017.3 Testes: encontro sem tema aparece no cronograma e não entra na cobertura | Feita (13 testes) | `cronograma/tests/test_encontro_sem_tema.py` (11), `presenca/tests/test_presenca.py` (2) |
+
+### Mudanças em relação ao plano
+- Não havia regra nova a implementar: os critérios já eram atendidos pela US006, US011
+  e US014. O trabalho foi provar isso com testes e mostrar a descrição no lugar do tema.
+- A exportação do cronograma (US016) passou a mostrar a descrição dos encontros sem
+  tema (`10/03 - Oração - a definir`). Sem descrição, continua "Sem tema".
+
+### Validação
+- Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
+  encontrou mudanças pendentes e a suíte completa (234 testes) passou.
+
 | T008.1 Criar a interface de regra de aviso (padrão Strategy), cada aviso com código próprio | Feita | `cronograma/avisos.py` |
 | T008.2 Implementar a regra "formador já ministrou este tema" (informando a data) | Feita | `cronograma/avisos.py` |
 | T008.3 Serviço devolve a formação gravada + lista de avisos, sem exceção (RN001) | Feita | `cronograma/services.py` |
@@ -751,4 +797,5 @@ Critérios de aceitação:
 ### Validação
 - Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
   encontrou mudanças pendentes e a suíte completa (235 testes) passou.
+
 - Sem migração nova.

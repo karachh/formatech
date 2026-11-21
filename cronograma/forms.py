@@ -30,7 +30,12 @@ class FormacaoForm(forms.Form):
 
     data = forms.DateField(widget=CAMPO_DATA)
     tema_id = forms.ChoiceField(label="Tema", required=False)
-    descricao = forms.CharField(label="Descrição", max_length=200, required=False)
+    descricao = forms.CharField(
+        label="Descrição",
+        max_length=200,
+        required=False,
+        help_text="Para encontro sem tema da apostila, descreva-o aqui (ex.: Oração, Dinâmica).",
+    )
 
     def __init__(self, *args, temas=(), **kwargs):
         super().__init__(*args, **kwargs)

@@ -24,6 +24,5 @@ class ExportadorTexto(ExportadorBase):
         return f"Cronograma de {titulo}\n"
 
     def linha(self, formacao):
-        tema = formacao.tema.nome if formacao.tema else "Sem tema"
         formador = formacao.formador.nome if formacao.formador else "a definir"
-        return f"{formacao.data:%d/%m} - {tema} - {formador}"
+        return f"{formacao.data:%d/%m} - {formacao.titulo} - {formador}"

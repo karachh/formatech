@@ -34,5 +34,16 @@ class Formacao(RegistroBase):
             ),
         ]
 
+    @property
+    def titulo(self):
+        """O que a tela mostra no lugar do tema (US017).
+
+        Encontro sem tema da apostila (oração, dinâmica) é identificado pela
+        descrição. Calculado, não armazenado (RN006).
+        """
+        if self.tema:
+            return self.tema.nome
+        return self.descricao or "Sem tema"
+
     def __str__(self):
-        return f"{self.data:%d/%m/%Y} · {self.tema or 'Sem tema'}"
+        return f"{self.data:%d/%m/%Y} · {self.titulo}"
