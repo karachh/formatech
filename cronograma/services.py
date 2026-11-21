@@ -5,7 +5,7 @@ from django.utils import timezone
 from cadastros import services as cadastros
 from cadastros.models import Formador, Tema
 
-from . import repositories
+from . import avisos, repositories
 from .models import Formacao
 
 MENSAGEM_SEM_CICLO = "Não há ciclo cadastrado para esta data."
@@ -93,14 +93,24 @@ def dados_para_escalacao(formacao_id, formador_id):
     return {
         "temas_ministrados": repositories.listar_temas_ministrados_por_formador(formador.pk),
         "carga_formacoes": repositories.contar_formacoes_do_formador_no_ciclo(formador.pk, ciclo),
+        "avisos": _avisos_da_escalacao(formacao, formador),
     }
 
 
 def escalar_formador(formacao_id, formador_id):
-    """Atribui um formador ativo somente quando a formação ainda não foi escalada."""
+    """Atribui um formador ativo somente quando a formação ainda não foi escalada.
+
+    RN001: devolve (formação gravada, lista de avisos). Os avisos nunca impedem a gravação.
+    """
     formacao = _buscar_formacao_sem_formador(formacao_id)
     formacao.formador = _buscar_formador(formador_id)
-    return repositories.salvar_formacao(formacao)
+    formacao = repositories.salvar_formacao(formacao)
+    return formacao, _avisos_da_escalacao(formacao, formacao.formador)
+
+
+def _avisos_da_escalacao(formacao, formador):
+    historico = repositories.listar_historico_temas_por_formador(formador.pk)
+    return avisos.verificar_avisos(formacao, formador, historico)
 
 
 def alterar_situacao(formacao_id, situacao):

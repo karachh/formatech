@@ -697,3 +697,58 @@ formador já ministrou nele.
 
 ### Mudanças em relação ao plano
 -
+---
+
+## US008 — Receber avisos ao escalar um formador
+
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF008 · **Situação:** em andamento (branch `us008-receber-avisos-ao-escalar-um-formador`)
+
+### O que faz
+Como coordenador, quero ser avisado quando o formador escolhido já ministrou aquele
+tema antes, para decidir com mais informação, sem ser impedido de confirmar mesmo assim.
+
+Critérios de aceitação:
+- Ao escalar um formador que já ministrou aquele tema, aparece um aviso na tela
+  indicando a data em que isso ocorreu.
+- É possível confirmar e gravar a formação normalmente mesmo com o aviso na tela.
+
+### Como foi feita
+- **Padrão Strategy** em `cronograma/avisos.py`. `RegraDeAviso` é a interface: cada
+  regra tem um `codigo` próprio e o método `verificar(formacao, formador, historico)`,
+  que devolve um `Aviso` (código e mensagem) ou `None`. A lista `REGRAS` reúne as
+  regras ativas, e `codigos_de_aviso()` lista exaustivamente os avisos possíveis
+  (RN001). Para criar um aviso novo, basta escrever outra classe e incluí-la em
+  `REGRAS`; o serviço não muda.
+- A regra `FormadorJaMinistrouTema` (código `formador_ja_ministrou_tema`) procura o
+  tema da formação no histórico do formador e informa a data mais recente. Encontro
+  sem tema não gera aviso.
+- **As regras não usam o ORM nem recebem `request`.** O serviço busca o histórico pelo
+  repositório (`listar_historico_temas_por_formador`, da US012) e o entrega pronto às
+  regras. Assim as regras são testadas sem banco (`SimpleTestCase`). Como o histórico
+  só tem formações `realizadas`, uma formação cancelada não conta como ministrada.
+- **RN001: aviso, nunca bloqueio.** `escalar_formador` grava a formação e devolve
+  `(formação gravada, lista de avisos)`, sem exceção nem constraint.
+- **Na tela, o aviso aparece duas vezes:** na consulta antes de confirmar
+  (`dados_para_escalacao` passou a trazer `avisos`), com o botão "Escalar formador"
+  disponível, e depois de gravar, como mensagem do tipo `warning` no cronograma. O
+  `base.html` ganhou a classe `aviso` para essas mensagens.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T008.1 Criar a interface de regra de aviso (padrão Strategy), cada aviso com código próprio | Feita | `cronograma/avisos.py` |
+| T008.2 Implementar a regra "formador já ministrou este tema" (informando a data) | Feita | `cronograma/avisos.py` |
+| T008.3 Serviço devolve a formação gravada + lista de avisos, sem exceção (RN001) | Feita | `cronograma/services.py` |
+| T008.4 Exibir os avisos na tela sem bloquear a gravação | Feita | `cronograma/views.py`, `cronograma/templates/cronograma/escalar_formador.html`, `core/templates/core/base.html` |
+| T008.5 Testes unitários das regras e da listagem de todos os códigos de aviso | Feita (14 testes) | `cronograma/tests/test_avisos.py` |
+
+### Mudanças em relação ao plano
+- `escalar_formador` passou a devolver uma tupla `(formação, avisos)` em vez de só a
+  formação. A view e o teste existente da US007 foram ajustados.
+- Os avisos valem para a tela de escalação (US007). O agendamento que já escolhe o
+  formador na inclusão (US006) ainda não devolve avisos; fica como melhoria futura.
+
+### Validação
+- Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
+  encontrou mudanças pendentes e a suíte completa (235 testes) passou.
+- Sem migração nova.
