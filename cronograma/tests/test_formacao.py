@@ -188,7 +188,7 @@ class ServicoEscalacaoTests(ComDados, TestCase):
     def test_escala_formador_ativo_em_formacao_sem_formador(self):
         formacao = self.formacao(date(2027, 3, 6))
 
-        resultado = services.escalar_formador(formacao.pk, str(self.formador.pk))
+        resultado, _ = services.escalar_formador(formacao.pk, str(self.formador.pk))
 
         self.assertEqual(resultado.formador, self.formador)
         formacao.refresh_from_db()

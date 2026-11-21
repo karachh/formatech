@@ -96,11 +96,13 @@ def escalar_formador(request, formacao_id):
 
     if request.method == "POST" and form.is_valid():
         try:
-            formacao = services.escalar_formador(formacao_id, form.cleaned_data["formador_id"])
+            formacao, avisos = services.escalar_formador(formacao_id, form.cleaned_data["formador_id"])
         except ValidationError as erro:
             form.add_error(None, erro)
         else:
             messages.success(request, f"Formador “{formacao.formador}” escalado.")
+            for aviso in avisos:
+                messages.warning(request, f"Aviso: {aviso.mensagem}")
             return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
     elif request.method == "GET" and request.GET and form.is_valid():
         try:
