@@ -8,3 +8,7 @@ def autenticar(username, senha):
     if usuario is None:
         raise ValidationError("Usuário ou senha inválidos.")
     return usuario
+
+def listar_usuarios_formadores():
+    """Logins que podem ser vinculados a um formador (US018)."""
+    return repositories.listar_usuarios_formadores()

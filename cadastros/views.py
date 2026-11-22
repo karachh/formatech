@@ -100,7 +100,7 @@ def editar_tema(request, tema_id):
 
 @coordenador_required
 def formadores(request):
-    form = FormadorForm(request.POST or None)
+    form = FormadorForm(request.POST or None, usuarios=services.listar_usuarios_formadores())
     if request.method == "POST" and form.is_valid():
         try:
             formador = services.cadastrar_formador(**form.cleaned_data)
@@ -124,10 +124,12 @@ def editar_formador(request, formador_id):
         raise Http404("Formador não encontrado.")
     form = FormadorForm(
         request.POST or None,
+        usuarios=services.listar_usuarios_formadores(),
         initial={
             "nome": formador.nome,
             "inicio_servico": formador.inicio_servico,
             "capacitado": formador.capacitado,
+            "usuario_id": formador.usuario_id,
         },
     )
     if request.method == "POST" and form.is_valid():
