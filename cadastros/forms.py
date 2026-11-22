@@ -30,6 +30,14 @@ class FormadorForm(forms.Form):
     nome = forms.CharField(max_length=150)
     inicio_servico = forms.DateField(label="Início de serviço", widget=CAMPO_DATA)
     capacitado = forms.BooleanField(label="Capacitado", required=False)
+    # US018: o login com que o formador consulta o próprio cronograma.
+    usuario_id = forms.ChoiceField(label="Usuário de acesso", required=False)
+
+    def __init__(self, *args, usuarios=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["usuario_id"].choices = [("", "Sem acesso ao sistema")] + [
+            (str(usuario.pk), usuario.username) for usuario in usuarios
+        ]
 
 
 class CicloFiltroForm(forms.Form):

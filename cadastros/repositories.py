@@ -3,6 +3,10 @@ from django.db import IntegrityError, transaction
 from .models import Ciclo, Formador, Perseverante, Tema
 
 
+class UsuarioJaVinculado(Exception):
+    """O banco recusou o formador pela UNIQUE formador_usuario_unico (US018)."""
+
+
 class PeriodoOcupado(Exception):
     """O banco recusou o ciclo pela EXCLUDE ciclo_sem_sobreposicao (RN002)."""
 
@@ -63,7 +67,7 @@ def salvar_tema(tema):
 
 
 def listar_formadores():
-    return list(Formador.objects.order_by("nome"))
+    return list(Formador.objects.select_related("usuario").order_by("nome"))
 
 
 def buscar_formador(formador_id):
@@ -74,8 +78,20 @@ def listar_formadores_ativos():
     return list(Formador.objects.filter(ativo=True).order_by("nome"))
 
 def salvar_formador(formador):
-    formador.save()
+    try:
+        with transaction.atomic():
+            formador.save()
+    except IntegrityError as erro:
+        restricao = getattr(getattr(erro.__cause__, "diag", None), "constraint_name", None)
+        if restricao == "formador_usuario_unico":
+            raise UsuarioJaVinculado from erro
+        raise
     return formador
+
+
+def buscar_formador_do_usuario(usuario_id):
+    """O formador vinculado ao login, ou None (US018)."""
+    return Formador.objects.filter(usuario_id=usuario_id).first()
 
 
 def inativar_formador(formador):

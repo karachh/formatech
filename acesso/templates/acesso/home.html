@@ -13,7 +13,7 @@
       <li><a href="{% url 'cronograma:cobertura' %}">Cobertura da apostila</a></li>
       <li><a href="{% url 'presenca:frequencia' %}">Frequência</a></li>\
     {% else %}
-      <li><a href="#">Cronograma</a></li>
+      <li><a href="{% url 'cronograma:meu_cronograma' %}">Cronograma</a></li>
     {% endif %}
     {% if user.perfil == "coordenador" %}
       <li><a href="{% url 'cadastros:ciclos' %}">Ciclos</a></li>

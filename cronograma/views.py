@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from acesso.decorators import coordenador_required
+from acesso.decorators import coordenador_required, formador_required
 from cadastros.forms import CicloFiltroForm
 from cadastros.models import Formador, Tema
 
@@ -201,3 +201,25 @@ def carga(request):
     if ciclo is not None:
         contexto["carga"] = services.carga_por_formador(ciclo)
     return render(request, "cronograma/carga.html", contexto)
+
+@formador_required
+@require_GET
+def meu_cronograma(request):
+    """US018: o cronograma do ciclo para o formador, somente leitura."""
+    ciclos = services.listar_ciclos()
+    filtro = CicloFiltroForm(request.GET or None, ciclos=ciclos)
+    ciclo_id = filtro.cleaned_data["ciclo"] if filtro.is_valid() else None
+    ciclo = services.ciclo_do_cronograma(ciclo_id)
+    formador = services.formador_do_usuario(request.user.pk)
+    formacoes = services.listar_formacoes_do_ciclo(ciclo) if ciclo else []
+    return render(
+        request,
+        "cronograma/meu_cronograma.html",
+        {
+            "filtro": filtro,
+            "ciclo": ciclo,
+            "formador": formador,
+            "formacoes": formacoes,
+            "minhas": services.datas_do_formador(formador, formacoes) if formador else [],
+        },
+    )

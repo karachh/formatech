@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
 
+from acesso import services as acesso
+
 from . import repositories
 from .models import (
     MENSAGEM_SOBREPOSICAO,
@@ -9,6 +11,8 @@ from .models import (
     Perseverante,
     Tema,
 )
+
+MENSAGEM_USUARIO_VINCULADO = "Este usuário já está vinculado a outro formador."
 
 
 def listar_ciclos():
@@ -112,23 +116,40 @@ def buscar_formador(formador_id):
     return repositories.buscar_formador(formador_id)
 
 
-def cadastrar_formador(nome, inicio_servico, capacitado):
+def cadastrar_formador(nome, inicio_servico, capacitado, usuario_id=None):
     formador = Formador(
         nome=(nome or "").strip(),
         inicio_servico=inicio_servico,
         capacitado=capacitado,
+        usuario_id=usuario_id or None,
     )
-    formador.clean_fields()
-    return repositories.salvar_formador(formador)
+    return _validar_e_salvar_formador(formador)
 
 
-def editar_formador(formador_id, nome, inicio_servico, capacitado):
+def editar_formador(formador_id, nome, inicio_servico, capacitado, usuario_id=None):
     formador = repositories.buscar_formador(formador_id)
     formador.nome = (nome or "").strip()
     formador.inicio_servico = inicio_servico
     formador.capacitado = capacitado
-    formador.clean_fields()
-    return repositories.salvar_formador(formador)
+    formador.usuario_id = usuario_id or None
+    return _validar_e_salvar_formador(formador)
+
+
+def _validar_e_salvar_formador(formador):
+    # o usuário vem de uma lista fechada no formulário; excluí-lo evita consultar o banco.
+    formador.clean_fields(exclude=["usuario"])
+    try:
+        return repositories.salvar_formador(formador)
+    except repositories.UsuarioJaVinculado:
+        raise ValidationError({"usuario_id": MENSAGEM_USUARIO_VINCULADO})
+
+
+def listar_usuarios_formadores():
+    return acesso.listar_usuarios_formadores()
+
+
+def buscar_formador_do_usuario(usuario_id):
+    return repositories.buscar_formador_do_usuario(usuario_id)
 
 
 def inativar_formador(formador_id):

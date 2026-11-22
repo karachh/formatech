@@ -15,7 +15,7 @@
 <h2>Formadores cadastrados</h2>
 {% if formadores %}
   <table>
-    <thead><tr><th>Nome</th><th>Início de serviço</th><th>Capacitado</th><th>Situação</th><th></th></tr></thead>
+    <thead><tr><th>Nome</th><th>Início de serviço</th><th>Capacitado</th><th>Situação</th><th>Usuário de acesso</th><th></th></tr></thead>
     <tbody>
       {% for formador in formadores %}
         <tr>
@@ -23,6 +23,7 @@
           <td>{{ formador.inicio_servico|date:"d/m/Y" }}</td>
           <td>{% if formador.capacitado %}Sim{% else %}Não{% endif %}</td>
           <td>{% if formador.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+          <td>{{ formador.usuario.username|default:"—" }}</td>
           <td>
             <a href="{% url 'cadastros:editar_formador' formador.id %}">Editar</a>
             {% if formador.ativo %}

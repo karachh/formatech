@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import DateRangeField, RangeBoundary, RangeOperators
 from django.core.exceptions import ValidationError
@@ -87,6 +88,21 @@ class Formador(RegistroBase):
     inicio_servico = models.DateField("início de serviço")
     capacitado = models.BooleanField()
     ativo = models.BooleanField(default=True)
+    # US018: o login do formador. Opcional, porque o formador pode ser cadastrado
+    # antes de ter acesso ao sistema. SET_NULL: apagar o login não apaga o formador.
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="usuário",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            # Um login pertence a um formador só. Vários formadores sem login (NULL) são permitidos.
+            models.UniqueConstraint(fields=["usuario"], name="formador_usuario_unico"),
+        ]
 
     def __str__(self):
         return self.nome

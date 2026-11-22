@@ -799,3 +799,68 @@ Critérios de aceitação:
   encontrou mudanças pendentes e a suíte completa (235 testes) passou.
 
 - Sem migração nova.
+
+---
+
+## US018 — Consultar o cronograma como formador
+
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF018 · **Situação:** em andamento (branch `us018-cronograma-do-formador`)
+
+### O que faz
+Como formador, quero consultar o cronograma do ciclo e ver as datas em que estou
+escalado, para me organizar sem depender de mensagem da coordenação.
+
+Critério de aceitação: logado como formador, a tela de cronograma mostra as datas em
+que ele está escalado, sem opção de editar nada.
+
+### Como foi feita
+- **Vínculo entre login e formador.** Até aqui, `Usuario` (app `acesso`) e `Formador`
+  (app `cadastros`) não se conheciam, e o sistema não tinha como saber quais datas eram
+  do formador logado. `Formador` ganhou o campo `usuario` (FK opcional para o
+  `Usuario`) e a restrição `formador_usuario_unico` em `Meta.constraints`: um login
+  pertence a um formador só, e vários formadores sem login continuam permitidos.
+  - É opcional porque o formador pode ser cadastrado antes de ter acesso ao sistema.
+  - Usa `SET_NULL`: apagar o login não apaga o formador nem o histórico dele.
+- O cadastro de formadores (US003) ganhou o campo "Usuário de acesso", que só oferece
+  logins com perfil formador (`acesso.services.listar_usuarios_formadores`). Um login
+  já vinculado é recusado pelo banco; o repositório traduz a violação de
+  `formador_usuario_unico` em `UsuarioJaVinculado`, e o serviço a transforma na
+  mensagem "Este usuário já está vinculado a outro formador." É o mesmo padrão da
+  unicidade do nome do tema (US005).
+- **Tela `/meu-cronograma/`** (`cronograma.views.meu_cronograma`), só para o perfil
+  formador (novo decorator `formador_required` em `acesso/decorators.py`) e só GET.
+  Mostra a lista "Minhas datas" do ciclo e o cronograma completo, com as linhas dele
+  destacadas e o nome trocado por "Você". Não tem formulário nem link de editar,
+  escalar, mudar situação ou lançar presença. Sem ciclo escolhido, usa o ciclo de hoje,
+  como a tela do coordenador.
+- O serviço encontra o formador pelo id do usuário (`formador_do_usuario`), sem
+  receber `request`, e separa as formações dele com `datas_do_formador`. Login sem
+  vínculo vê uma orientação para pedir o vínculo à coordenação.
+- O link "Cronograma" da home do formador, que apontava para `#`, passou a abrir
+  `/meu-cronograma/`.
+- **Bloqueio por URL direta (CA008):** as telas de edição já usavam
+  `@coordenador_required`. A T018.2 foi confirmar isso com testes que percorrem todas
+  essas URLs como formador, por GET e por POST, e verificam que nada foi alterado.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T018.1 Criar visão somente leitura do cronograma para o formador, destacando as datas dele | Feita | `cadastros/models.py`, `cadastros/migrations/0006_formador_usuario.py`, `cadastros/repositories.py`, `cadastros/services.py`, `cadastros/forms.py`, `cadastros/views.py`, `cadastros/templates/cadastros/formadores.html`, `acesso/repositories.py`, `acesso/services.py`, `acesso/decorators.py`, `cronograma/services.py`, `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/meu_cronograma.html`, `acesso/templates/acesso/home.html`, `core/templates/core/base.html` |
+| T018.2 Bloquear edição e frequência para o perfil formador, inclusive por URL direta (CA008) | Feita (as telas já eram do coordenador; coberto por testes) | `cronograma/tests/test_meu_cronograma.py` |
+| T018.3 Testes de permissão do perfil formador | Feita (22 testes) | `cronograma/tests/test_meu_cronograma.py` (17), `cadastros/tests/test_formador.py` (5) |
+
+### Mudanças em relação ao plano
+- **Mudança de esquema não prevista na Etapa 3:** o vínculo `Formador.usuario` foi
+  necessário para saber quem é o formador logado. Ele altera o cadastro de formadores
+  da US003. A decisão precisa ser registrada com a equipe.
+- A tela de frequência (US015) ainda não existe na `main`. Quando entrar, ela deve usar
+  `@coordenador_required` para cumprir a parte "frequência" da T018.2, e o teste
+  `PermissaoDoFormadorTests` deve ganhar a URL dela.
+- O formador ainda não vê o próprio cronograma na exportação em texto (US016), que
+  continua só do coordenador.
+
+### Validação
+- Em 21/11/2026, `manage.py check` não acusou problemas e `makemigrations --check` não
+  encontrou mudanças pendentes, e a suíte completa (257 testes) passou.
+- **Migração nova:** `cadastros/0006_formador_usuario`. Quem baixar a branch precisa
+  rodar `python manage.py migrate`.
