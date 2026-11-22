@@ -36,6 +36,8 @@
               · <a href="{% url 'presenca:lancar_presenca' formacao.id %}">Presença</a>
               {% if not formacao.formador %}
                 · <a href="{% url 'cronograma:escalar_formador' formacao.id %}">Escalar formador</a>
+              {% else %}
+                · <a href="{% url 'cronograma:trocar_formador' formacao.id %}">Trocar formador</a>
               {% endif %}
               <form method="post" action="{% url 'cronograma:alterar_situacao' formacao.id %}">
                 {% csrf_token %}

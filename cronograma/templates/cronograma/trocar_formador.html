@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Trocar formador · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Trocar formador</h1>
+<p>Formação de {{ formacao.data|date:"d/m/Y" }} · {{ formacao.titulo }}</p>
+<p>Formador atual: <strong>{{ formacao.formador.nome|default:"A escalar" }}</strong></p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Trocar</button>
+  <a href="{% url 'cronograma:cronograma' %}">Cancelar</a>
+</form>
+
+<h2>Histórico de trocas</h2>
+{% if trocas %}
+  <table>
+    <thead><tr><th>Data</th><th>Formador anterior</th><th>Novo formador</th></tr></thead>
+    <tbody>
+      {% for troca in trocas %}
+        <tr>
+          <td>{{ troca.data|date:"d/m/Y" }}</td>
+          <td>{{ troca.formador_anterior.nome }}</td>
+          <td>{{ troca.formador_novo.nome }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Nenhuma troca registrada nesta formação.</p>
+{% endif %}
+{% endblock %}
