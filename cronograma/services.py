@@ -236,3 +236,25 @@ def carga_por_formador(ciclo):
     totais = repositories.contar_formacoes_por_formador(ciclo)
     carga = [(formador, totais.get(formador.pk, 0)) for formador in listar_formadores_ativos()]
     return sorted(carga, key=lambda par: (-par[1], par[0].nome))
+
+
+
+def trocar_formador(formacao_id, formador_id):
+    formacao = repositories.buscar_formacao(formacao_id)
+    if formacao.formador_id is None:
+        raise ValidationError("Esta formação ainda não tem formador; use a escalação.")
+    novo = _buscar_formador(formador_id)
+    if novo is None:
+        raise ValidationError({"formador_id": "Selecione um formador válido."})
+    if novo.pk == formacao.formador_id:
+        raise ValidationError("O novo formador é o mesmo que já está escalado.")
+    formacao = repositories.trocar_formador_da_formacao(formacao, novo, timezone.localdate())
+    return formacao, _avisos_da_escalacao(formacao, novo)
+
+
+def trocas_da_formacao(formacao_id):
+    return repositories.listar_trocas_da_formacao(formacao_id)
+
+
+def numero_de_trocas_do_ciclo(ciclo):
+    return repositories.contar_trocas_do_ciclo(ciclo)
