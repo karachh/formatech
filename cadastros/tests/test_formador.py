@@ -272,3 +272,53 @@ class TelaFormadoresTests(ComoCoordenador, TestCase):
     def test_formador_inexistente_na_edicao_da_404(self):
         resposta = self.client.get(reverse("cadastros:editar_formador", args=[999_999]))
         self.assertEqual(resposta.status_code, 404)
+
+class VinculoDeUsuarioTests(ComoCoordenador, TestCase):
+    """US018: o coordenador liga o formador ao login dele no cadastro."""
+
+    def setUp(self):
+        super().setUp()
+        self.login_ana = Usuario.objects.create_user(username="ana", password="x", perfil=Usuario.Perfil.FORMADOR)
+
+    def postar(self, url=URL, nome="Ana", usuario_id=""):
+        dados = {"nome": nome, "inicio_servico": "2025-01-10", "capacitado": "on", "usuario_id": usuario_id}
+        return self.client.post(url, dados, follow=True)
+
+    def test_cadastro_vincula_o_usuario_e_a_lista_mostra(self):
+        resposta = self.postar(usuario_id=self.login_ana.pk)
+
+        self.assertEqual(Formador.objects.get().usuario, self.login_ana)
+        self.assertContains(resposta, "<td>ana</td>", html=True)
+
+    def test_cadastro_sem_usuario_continua_valendo(self):
+        self.postar()
+
+        self.assertIsNone(Formador.objects.get().usuario)
+
+    def test_so_logins_de_formador_sao_oferecidos(self):
+        resposta = self.client.get(URL)
+
+        opcoes = dict(resposta.context["form"].fields["usuario_id"].choices)
+        self.assertIn(str(self.login_ana.pk), opcoes)
+        self.assertNotIn("coord", opcoes.values())
+
+    def test_login_ja_vinculado_mostra_erro_e_nao_salva(self):
+        self.postar(usuario_id=self.login_ana.pk)
+
+        resposta = self.postar(nome="Outra", usuario_id=self.login_ana.pk)
+
+        self.assertContains(resposta, services.MENSAGEM_USUARIO_VINCULADO)
+        self.assertEqual(Formador.objects.count(), 1)
+
+    def test_edicao_vincula_e_desvincula(self):
+        formador = Formador.objects.create(nome="Ana", inicio_servico=date(2025, 1, 10), capacitado=True)
+        url = reverse("cadastros:editar_formador", args=[formador.pk])
+
+        self.postar(url, usuario_id=self.login_ana.pk)
+        formador.refresh_from_db()
+        self.assertEqual(formador.usuario, self.login_ana)
+        self.assertEqual(self.client.get(url).context["form"].initial["usuario_id"], self.login_ana.pk)
+
+        self.postar(url)
+        formador.refresh_from_db()
+        self.assertIsNone(formador.usuario)
