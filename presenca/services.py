@@ -41,3 +41,15 @@ def lancar_presencas(formacao_id, situacoes):
         raise ValidationError("Selecione uma situação válida para cada perseverante.")
     repositories.salvar_presencas(formacao.pk, situacoes)
     return formacao
+
+def listar_ciclos():
+    return cadastros.listar_ciclos()
+
+
+def listar_perseverantes_do_ciclo(ciclo_id):
+    return cadastros.listar_perseverantes(ciclo_id)
+
+
+def frequencia_do_perseverante(perseverante):
+    return repositories.contar_presencas_por_situacao(perseverante.pk, perseverante.ciclo)
+

@@ -6,4 +6,5 @@ app_name = "presenca"
 
 urlpatterns = [
     path("presenca/<int:formacao_id>/", views.lancar_presenca, name="lancar_presenca"),
+    path("frequencia/", views.frequencia, name="frequencia"),
 ]

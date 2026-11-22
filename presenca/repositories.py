@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.db import transaction
 
 from .models import Presenca
@@ -20,3 +21,18 @@ def salvar_presencas(formacao_id, situacoes):
                 perseverante_id=perseverante_id,
                 defaults={"situacao": situacao},
             )
+
+def contar_presencas_por_situacao(perseverante, ciclo):
+    linhas = (
+        Presenca.objects.filter(
+            perseverante=perseverante,
+            formacao__data__range=(ciclo.inicio, ciclo.fim),
+        )
+        .exclude(formacao__situacao="cancelada")
+        .values("situacao")
+        .annotate(total=Count("id"))
+    )
+    contagem = {"presente": 0, "ausente": 0, "justificado": 0}
+    for linha in linhas:
+        contagem[linha["situacao"]] = linha["total"]
+    return contagem
