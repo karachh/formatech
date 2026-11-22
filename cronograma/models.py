@@ -47,3 +47,21 @@ class Formacao(RegistroBase):
 
     def __str__(self):
         return f"{self.data:%d/%m/%Y} · {self.titulo}"
+
+
+class TrocaFormador(RegistroBase):
+    formacao = models.ForeignKey(Formacao, on_delete=models.PROTECT)
+    formador_anterior = models.ForeignKey(Formador, on_delete=models.PROTECT, related_name="+")
+    formador_novo = models.ForeignKey(Formador, on_delete=models.PROTECT, related_name="+")
+    data = models.DateField("data da troca")
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~Q(formador_anterior=models.F("formador_novo")),
+                name="troca_formadores_diferentes",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.formacao} · {self.formador_anterior} → {self.formador_novo}"
