@@ -1,5 +1,6 @@
 from cadastros.models import Tema
-from .models import Formacao
+from .models import Formacao, TrocaFormador
+from django.db import transaction
 from django.db.models import Count
 
 
@@ -96,3 +97,29 @@ def contar_formacoes_por_formador(ciclo):
         .annotate(total=Count("id"))
     )
     return {linha["formador_id"]: linha["total"] for linha in linhas}
+
+
+
+def trocar_formador_da_formacao(formacao, formador_novo, data):
+    with transaction.atomic():
+        TrocaFormador.objects.create(
+            formacao=formacao,
+            formador_anterior=formacao.formador,
+            formador_novo=formador_novo,
+            data=data,
+        )
+        formacao.formador = formador_novo
+        formacao.save()
+    return formacao
+
+
+def listar_trocas_da_formacao(formacao_id):
+    return list(
+        TrocaFormador.objects.filter(formacao_id=formacao_id)
+        .select_related("formador_anterior", "formador_novo")
+        .order_by("data", "id")
+    )
+
+
+def contar_trocas_do_ciclo(ciclo):
+    return TrocaFormador.objects.filter(formacao__data__range=(ciclo.inicio, ciclo.fim)).count()
