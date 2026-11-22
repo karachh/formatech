@@ -15,3 +15,14 @@ def coordenador_required(view):
         return view(request, *args, **kwargs)
 
     return envolvida
+
+def formador_required(view):
+    """US018: telas só do perfil formador."""
+
+    @wraps(view)
+    def envolvida(request, *args, **kwargs):
+        if getattr(request.user, "perfil", None) != Usuario.Perfil.FORMADOR:
+            raise PermissionDenied
+        return view(request, *args, **kwargs)
+
+    return envolvida

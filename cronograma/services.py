@@ -58,6 +58,16 @@ def buscar_formacao(formacao_id):
     return repositories.buscar_formacao(formacao_id)
 
 
+def formador_do_usuario(usuario_id):
+    """O formador vinculado ao login (US018), ou None se o login não tem vínculo."""
+    return cadastros.buscar_formador_do_usuario(usuario_id)
+
+
+def datas_do_formador(formador, formacoes):
+    """US018: das formações do ciclo, as que estão com este formador."""
+    return [formacao for formacao in formacoes if formacao.formador_id == formador.pk]
+
+
 def agendar_formacao(data, tema_id, formador_id, descricao=""):
     """Agenda uma formação (RF006). Toda formação nasce prevista (T006.3)."""
     formacao = Formacao(

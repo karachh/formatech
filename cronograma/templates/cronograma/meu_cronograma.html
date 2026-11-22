@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Meu cronograma · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Meu cronograma</h1>
+
+{% if not formador %}
+  <p>Seu usuário ainda não está vinculado a um formador. Peça à coordenação para fazer o vínculo no cadastro de formadores.</p>
+{% else %}
+  <form method="get">
+    {{ filtro.as_p }}
+    <button type="submit">Filtrar</button>
+  </form>
+
+  {% if ciclo %}
+    <h2>Minhas datas em {{ ciclo.nome }}</h2>
+    {% if minhas %}
+      <ul>
+        {% for formacao in minhas %}
+          <li>{{ formacao.data|date:"d/m/Y" }} · {{ formacao.tema.nome|default:"Sem tema" }} ({{ formacao.get_situacao_display }})</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Você não está escalado em nenhuma formação deste ciclo.</p>
+    {% endif %}
+
+    <h2>Cronograma completo</h2>
+    {% if formacoes %}
+      <table>
+        <thead><tr><th>Data</th><th>Tema</th><th>Formador</th><th>Situação</th></tr></thead>
+        <tbody>
+          {% for formacao in formacoes %}
+            <tr{% if formacao.formador_id == formador.pk %} class="minha"{% endif %}>
+              <td>{{ formacao.data|date:"d/m/Y" }}</td>
+              <td>{{ formacao.tema.nome|default:"Sem tema" }}</td>
+              <td>{% if formacao.formador_id == formador.pk %}<strong>Você</strong>{% else %}{{ formacao.formador.nome|default:"A escalar" }}{% endif %}</td>
+              <td>{{ formacao.get_situacao_display }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nenhuma formação agendada neste ciclo.</p>
+    {% endif %}
+  {% else %}
+    <p>Selecione um ciclo para ver o cronograma.</p>
+  {% endif %}
+{% endif %}
+
+<p><a href="{% url 'acesso:home' %}">Voltar ao início</a></p>
+{% endblock %}

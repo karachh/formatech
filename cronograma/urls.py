@@ -13,4 +13,5 @@ urlpatterns = [
     path("historico/", views.historico, name="historico"),
     path("exportar/", views.exportar, name="exportar"),
     path("carga/", views.carga, name="carga"),
+    path("meu-cronograma/", views.meu_cronograma, name="meu_cronograma"),
 ]
