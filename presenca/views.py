@@ -34,3 +34,18 @@ def lancar_presenca(request, formacao_id):
             # Volta para a própria tela: reabrir mostra o que foi salvo (T014.4).
             return redirect("presenca:lancar_presenca", formacao_id=formacao.pk)
     return render(request, "presenca/lancar_presenca.html", {"form": form, "formacao": formacao})
+
+@coordenador_required
+def frequencia(request):
+    ciclos = services.listar_ciclos()
+    try:
+        ciclo_id = int(request.GET.get("ciclo") or (ciclos[0].pk if ciclos else 0))
+    except ValueError:
+        raise Http404("Ciclo inválido.")
+    linhas = []
+    if ciclo_id:
+        linhas = [
+            (p, services.frequencia_do_perseverante(p))
+            for p in services.listar_perseverantes_do_ciclo(ciclo_id)
+        ]
+    return render(request, "presenca/frequencia.html", {"ciclos": ciclos, "ciclo_id": ciclo_id, "linhas": linhas})
