@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Formacao
+from .models import Formacao, TrocaFormador
 
 
 class FormacaoAdmin(admin.ModelAdmin):
