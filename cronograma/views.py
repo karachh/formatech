@@ -223,3 +223,28 @@ def meu_cronograma(request):
             "minhas": services.datas_do_formador(formador, formacoes) if formador else [],
         },
     )
+
+
+@coordenador_required
+def trocar_formador(request, formacao_id):
+    try:
+        formacao = services.buscar_formacao(formacao_id)
+    except Formacao.DoesNotExist:
+        raise Http404("Formação não encontrada.")
+
+    form = EscalacaoForm(request.POST or None, formadores=services.listar_formadores_ativos())
+    if request.method == "POST" and form.is_valid():
+        try:
+            formacao, avisos = services.trocar_formador(formacao_id, form.cleaned_data["formador_id"])
+        except ValidationError as erro:
+            form.add_error(None, erro)
+        else:
+            messages.success(request, f"Formador trocado para “{formacao.formador}”.")
+            for aviso in avisos:
+                messages.warning(request, f"Aviso: {aviso.mensagem}")
+            return redirect(_url_do_cronograma(services.ciclo_da_formacao(formacao)))
+    return render(
+        request,
+        "cronograma/trocar_formador.html",
+        {"form": form, "formacao": formacao, "trocas": services.trocas_da_formacao(formacao_id)},
+    )

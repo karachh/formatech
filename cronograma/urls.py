@@ -14,4 +14,5 @@ urlpatterns = [
     path("exportar/", views.exportar, name="exportar"),
     path("carga/", views.carga, name="carga"),
     path("meu-cronograma/", views.meu_cronograma, name="meu_cronograma"),
+    path("cronograma/<int:formacao_id>/trocar/", views.trocar_formador, name="trocar_formador"),
 ]
