@@ -17,6 +17,7 @@
 {% if relatorio %}
   <h2>{{ relatorio.ciclo.nome }}</h2>
   <p>Período: {{ relatorio.ciclo.inicio|date:"d/m/Y" }} a {{ relatorio.ciclo.fim|date:"d/m/Y" }}</p>
+  <p><a href="{% url 'relatorios:excel' %}?ciclo={{ relatorio.ciclo.pk }}">Exportar Excel</a></p>
 
   <section>
     <h2>Formações realizadas ({{ relatorio.realizadas|length }})</h2>
