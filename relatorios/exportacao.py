@@ -107,6 +107,8 @@ def gerar_planilha(relatorio):
     ]
     if linhas_frequencia:
         totais = relatorio["totais_frequencia"]
+        if not any(totais.values()):
+            linhas_frequencia.append(("Sem presença lançada", "", "", ""))
         linhas_frequencia.append(
             ("Total", totais["presente"], totais["ausente"], totais["justificado"])
         )
@@ -152,6 +154,8 @@ def _adicionar_secao(planilha, linha, titulo, cabecalhos, dados, sem_dados=None)
         for coluna, valor in enumerate(valores, start=1):
             celula = planilha.cell(row=linha, column=coluna, value=valor)
             celula.alignment = Alignment(vertical="top", wrap_text=True)
+            if isinstance(valor, str):
+                celula.data_type = "s"
             if hasattr(valor, "strftime"):
                 celula.number_format = "dd/mm/yyyy"
         linha += 1
@@ -288,6 +292,8 @@ def gerar_pdf(relatorio):
     ]
     if linhas_frequencia:
         totais = relatorio["totais_frequencia"]
+        if not any(totais.values()):
+            linhas_frequencia.append(("Sem presença lançada", "", "", ""))
         linhas_frequencia.append(
             ("Total", totais["presente"], totais["ausente"], totais["justificado"])
         )

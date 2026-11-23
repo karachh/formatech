@@ -864,3 +864,51 @@ que ele está escalado, sem opção de editar nada.
   encontrou mudanças pendentes, e a suíte completa (257 testes) passou.
 - **Migração nova:** `cadastros/0006_formador_usuario`. Quem baixar a branch precisa
   rodar `python manage.py migrate`.
+
+---
+
+## US019 — Gerar relatório de fechamento do ciclo
+
+**RF:** RF019 · **Situação:** implementada na branch `us019-relatorio-fechamento-ciclo`
+
+### O que faz
+Como coordenador, quero consultar o fechamento consolidado de um ciclo encerrado e
+exportá-lo em Excel ou PDF.
+
+### Como foi feita
+- A app `relatorios` consolida os serviços existentes de cronograma, cadastro e
+  presença. O serviço não usa ORM nem recebe `request`; o acesso ao banco continua
+  centralizado nos repositórios dos módulos de origem.
+- A seleção lista apenas ciclos com `situacao=encerrado`; o serviço também valida o
+  estado antes de gerar o relatório. O perfil coordenador é obrigatório.
+- O cronograma deriva o ciclo da data da formação (RN002), com início e fim
+  inclusivos. O relatório separa as formações realizadas e canceladas.
+- A cobertura usa a classificação existente da apostila: somente temas obrigatórios,
+  canceladas não cobrem tema e, havendo mais de uma formação, realizada prevalece
+  sobre prevista. O relatório mostra as três classificações e seus totais.
+- A carga reutiliza a consulta existente de formações realizadas por formador; exibe
+  formadores ativos, inclusive quem tem carga zero. As trocas são contadas pelo
+  serviço existente para formações cujas datas pertencem ao ciclo.
+- A frequência reutiliza a contagem existente de presente, ausente e justificado por
+  perseverante, excluindo formações canceladas. O relatório apresenta as linhas por
+  pessoa e os totais da turma; sem lançamentos, as contagens permanecem zero.
+- A investigação localizou a implementação e testes da troca de formador associada à
+  US009, mas não há seção US009 neste histórico. Também encontrou a tela, serviço e
+  testes de frequência da US015, apesar da nota anterior da US018 dizer que ela ainda
+  não existia. A US019 reutiliza essas implementações, sem criar regras paralelas.
+- A planilha usa `openpyxl` e o PDF usa `reportlab`. O PDF usa tabelas multipágina com
+  cabeçalhos repetidos e rodapé com ciclo e número da página. Não há migração.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T019.1 Serviço de consolidação dos cinco blocos | Feita | `relatorios/services.py` |
+| T019.2 Tela do relatório para coordenador | Feita | `relatorios/forms.py`, `relatorios/views.py`, `relatorios/urls.py`, `relatorios/templates/relatorios/fechamento.html`, `acesso/templates/acesso/home.html`, `config/urls.py` |
+| T019.3 Exportação em planilha Excel | Feita | `relatorios/exportacao.py`, `relatorios/views.py`, `relatorios/urls.py`, `requirements.txt` |
+| T019.4 Exportação em PDF | Feita | `relatorios/exportacao.py`, `relatorios/views.py`, `relatorios/urls.py`, `requirements.txt` |
+| T019.5 Testes e documentação | Feita | `relatorios/tests/test_relatorio.py`, `HISTORIAS.md` |
+
+### Mudanças em relação ao plano
+- Nenhuma regra de negócio foi acrescentada aos cinco blocos. Temas, carga e
+  frequência seguem as regras dos serviços de origem.
+- Não foi criada migration; o relatório é calculado a partir dos dados existentes.
