@@ -7,4 +7,5 @@ app_name = "relatorios"
 urlpatterns = [
     path("relatorios/fechamento/", views.fechamento, name="fechamento"),
     path("relatorios/fechamento/excel/", views.excel, name="excel"),
+    path("relatorios/fechamento/pdf/", views.pdf, name="pdf"),
 ]

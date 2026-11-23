@@ -5,7 +5,7 @@ from django.shortcuts import render
 from acesso.decorators import coordenador_required
 
 from . import services
-from .exportacao import gerar_planilha, nome_arquivo_relatorio
+from .exportacao import gerar_pdf, gerar_planilha, nome_arquivo_relatorio
 from .forms import CicloRelatorioForm
 
 
@@ -55,5 +55,18 @@ def excel(request):
     )
     resposta["Content-Disposition"] = (
         f'attachment; filename="{nome_arquivo_relatorio(relatorio["ciclo"], "xlsx")}"'
+    )
+    return resposta
+
+
+@coordenador_required
+def pdf(request):
+    relatorio, form = _relatorio_exportacao(request)
+    if relatorio is None:
+        return HttpResponseBadRequest("; ".join(form.errors.get("ciclo", [])))
+
+    resposta = HttpResponse(gerar_pdf(relatorio), content_type="application/pdf")
+    resposta["Content-Disposition"] = (
+        f'attachment; filename="{nome_arquivo_relatorio(relatorio["ciclo"], "pdf")}"'
     )
     return resposta
