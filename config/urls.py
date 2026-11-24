@@ -22,5 +22,6 @@ urlpatterns = [
     path('', include('cadastros.urls')),
     path('', include('cronograma.urls')),
     path('', include('presenca.urls')),
+    path('', include('relatorios.urls')),
     path('auth/', include('acesso.urls'))
 ]

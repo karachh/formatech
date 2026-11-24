@@ -1,0 +1,137 @@
+{% extends "core/base.html" %}
+
+{% block titulo %}Fechamento do ciclo · FORMATECH{% endblock %}
+
+{% block conteudo %}
+<h1>Relatório de fechamento do ciclo</h1>
+
+<form method="get">
+  {{ form.as_p }}
+  <button type="submit">Gerar relatório</button>
+</form>
+
+{% if not ciclos %}
+  <p>Nenhum ciclo encerrado disponível.</p>
+{% endif %}
+
+{% if relatorio %}
+  <h2>{{ relatorio.ciclo.nome }}</h2>
+  <p>Período: {{ relatorio.ciclo.inicio|date:"d/m/Y" }} a {{ relatorio.ciclo.fim|date:"d/m/Y" }}</p>
+  <p>
+    <a href="{% url 'relatorios:excel' %}?ciclo={{ relatorio.ciclo.pk }}">Exportar Excel</a>
+    <a href="{% url 'relatorios:pdf' %}?ciclo={{ relatorio.ciclo.pk }}">Exportar PDF</a>
+  </p>
+
+  <section>
+    <h2>Formações realizadas ({{ relatorio.realizadas|length }})</h2>
+    {% if relatorio.realizadas %}
+      <table>
+        <thead><tr><th>Data</th><th>Formação</th><th>Formador</th></tr></thead>
+        <tbody>
+          {% for formacao in relatorio.realizadas %}
+            <tr>
+              <td>{{ formacao.data|date:"d/m/Y" }}</td>
+              <td>{{ formacao.titulo }}</td>
+              <td>{{ formacao.formador|default:"A definir" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nenhuma formação realizada neste ciclo.</p>
+    {% endif %}
+
+    <h2>Formações canceladas ({{ relatorio.canceladas|length }})</h2>
+    {% if relatorio.canceladas %}
+      <table>
+        <thead><tr><th>Data</th><th>Formação</th><th>Formador</th></tr></thead>
+        <tbody>
+          {% for formacao in relatorio.canceladas %}
+            <tr>
+              <td>{{ formacao.data|date:"d/m/Y" }}</td>
+              <td>{{ formacao.titulo }}</td>
+              <td>{{ formacao.formador|default:"A definir" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nenhuma formação cancelada neste ciclo.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Cobertura final da apostila</h2>
+    <p>{{ relatorio.cobertura.realizados|length }} de {{ relatorio.total_temas }} temas realizados.</p>
+    <h3>Realizados ({{ relatorio.cobertura.realizados|length }})</h3>
+    {% if relatorio.cobertura.realizados %}
+      <ul>{% for tema in relatorio.cobertura.realizados %}<li>{{ tema.nome }}</li>{% endfor %}</ul>
+    {% else %}
+      <p>Nenhum tema da apostila realizado.</p>
+    {% endif %}
+    <h3>Agendados ({{ relatorio.cobertura.agendados|length }})</h3>
+    {% if relatorio.cobertura.agendados %}
+      <ul>{% for tema in relatorio.cobertura.agendados %}<li>{{ tema.nome }}</li>{% endfor %}</ul>
+    {% else %}
+      <p>Nenhum tema agendado.</p>
+    {% endif %}
+    <h3>Não alocados ({{ relatorio.cobertura.nao_alocados|length }})</h3>
+    {% if relatorio.cobertura.nao_alocados %}
+      <ul>{% for tema in relatorio.cobertura.nao_alocados %}<li>{{ tema.nome }}</li>{% endfor %}</ul>
+    {% else %}
+      <p>Nenhum tema não alocado.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Carga por formador</h2>
+    {% if relatorio.carga %}
+      <table>
+        <thead><tr><th>Formador</th><th>Formações realizadas</th></tr></thead>
+        <tbody>
+          {% for formador, total in relatorio.carga %}
+            <tr><td>{{ formador.nome }}</td><td>{{ total }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nenhum formador ativo cadastrado.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Número de trocas de formador</h2>
+    <p>{{ relatorio.trocas }}</p>
+  </section>
+
+  <section>
+    <h2>Frequência da turma</h2>
+    {% if relatorio.frequencias %}
+      <table>
+        <thead><tr><th>Perseverante</th><th>Presente</th><th>Ausente</th><th>Justificado</th></tr></thead>
+        <tbody>
+          {% for perseverante, frequencia in relatorio.frequencias %}
+            <tr>
+              <td>{{ perseverante.nome }}</td>
+              <td>{{ frequencia.presente }}</td>
+              <td>{{ frequencia.ausente }}</td>
+              <td>{{ frequencia.justificado }}</td>
+            </tr>
+          {% endfor %}
+          <tr>
+            <th>Total</th>
+            <th>{{ relatorio.totais_frequencia.presente }}</th>
+            <th>{{ relatorio.totais_frequencia.ausente }}</th>
+            <th>{{ relatorio.totais_frequencia.justificado }}</th>
+          </tr>
+        </tbody>
+      </table>
+      {% if not relatorio.totais_frequencia.presente and not relatorio.totais_frequencia.ausente and not relatorio.totais_frequencia.justificado %}
+        <p>Não há presenças lançadas para este ciclo.</p>
+      {% endif %}
+    {% else %}
+      <p>Nenhum perseverante cadastrado neste ciclo.</p>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}
