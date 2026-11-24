@@ -11,8 +11,6 @@ Cada história tem uma seção com:
 
 ---
 
----
-
 ## US001 — Login no sistema
 
 **Responsável:** Murilo · **Sprint:** 1 · **RF:** RF001 · **Situação:** finalizado
@@ -80,16 +78,15 @@ tela de login. A senha é armazenada com hash (NFS001).
   cada view, e a restrição por perfil foi aplicada em `cadastros/views.py`, arquivo de
   outra história. Os testes de ciclos (`cadastros/tests/test_tela_ciclos.py`) passaram
   a entrar como coordenador, com o mixin `ComoCoordenador`.
-- Na T001.5, só "Ciclos" tem rota real. Os demais links do menu (`#`) serão ligados
-  quando as telas existirem. "Temas que já ministrei" depende do vínculo entre
-  `Usuario` e `Formador`, que não existe ainda (o model `Formador` é de outra história).
-  Esse vínculo precisa ser decidido pela equipe.
+- Na T001.5, só "Ciclos" tinha rota real. Os demais links do menu foram ligados
+  pelas histórias seguintes, à medida que as telas foram criadas. "Temas que já ministrei" depende do vínculo entre
+  `Usuario` e `Formador`, criado depois na US018 (`Formador.usuario`).
 - O botão "Sair" está na home. Quando houver um menu global no `base.html`, ele pode
   migrar para lá.
 
 ## US002 — Abrir um ciclo
 
-**Responsável:** Cauã · **Sprint:** 1 · **RF:** RF002 · **Situação:** em andamento
+**Responsável:** Cauã · **Sprint:** 1 · **RF:** RF002 · **Situação:** concluída; mesclada na `main` (PRs #2 e #3)
 
 ### O que faz
 Como coordenador, quero criar um ciclo anual com data de início e fim, para
@@ -162,7 +159,8 @@ e inativos com a situação identificada.
 ### Como foi feita
 - `Formador` herda de `RegistroBase`, tem nome, início de serviço obrigatório,
   indicação de capacitação e estado ativo (T003.1). Novos registros começam ativos.
-- `Usuario` e `Formador` continuam sem relacionamento. A contagem de formações e a
+- `Usuario` e `Formador` ficaram sem relacionamento nesta história; o vínculo
+  `Formador.usuario` foi criado depois, na US018. A contagem de formações e a
   lista de temas não são armazenadas, conforme RN006. A edição não reativa registros.
 - O repositório concentra listar, buscar, salvar e inativar; o serviço valida os dados
   sem receber `request` nem acessar diretamente o ORM.
@@ -179,8 +177,8 @@ e inativos com a situação identificada.
 | T003.5 Testes do cadastro e da inativação | Feita (21 testes, todos passando em 03/11/2026) | `cadastros/tests/test_formador.py` |
 
 ### Mudanças em relação ao plano
-- A relação entre `Usuario` e `Formador` permaneceu fora do escopo, pois não foi
-  confirmada pela equipe.
+- A relação entre `Usuario` e `Formador` ficou fora do escopo desta história e foi
+  implementada na US018.
 - A listagem inclui ambos os estados; a ação de inativar aparece apenas para registros
   ativos. Não há ação de reativação.
 - A US003 e a US004 foram entregues juntas, num único commit e num único PR (#6),
@@ -339,7 +337,7 @@ preserva o registro, e a exclusão a pedido o apaga.
 
 ## US006 — Montar o cronograma do ciclo
 
-**Responsável:** Cauã · **Sprint:** 1 (entregue na Sprint 2) · **RF:** RF006 · **Situação:** em revisão (branch `us006-montar-cronograma-do-ciclo`); 23 testes novos, suíte completa com 146 passando (03/11/2026)
+**Responsável:** Cauã · **Sprint:** 1 · **RF:** RF006 · **Situação:** concluída; mesclada na `main` (PR #9); 23 testes novos, suíte completa com 146 passando (03/11/2026)
 
 ### O que faz
 Como coordenador, quero agendar formações informando data, tema e formador, para ter o
@@ -410,7 +408,7 @@ visíveis.
 
 ## US007 — Escalar formador e alterar situação da formação
 
-**Responsável:** Bruno · **Sprint:** 2 · **Situação:** em desenvolvimento (branch `us007-escalar-formador`)
+**Responsável:** Bruno · **Sprint:** 2 · **RF:** RF007 + RF010 · **Situação:** concluída; mesclada na `main` (PR #12)
 
 ### O que faz
 Como coordenador, quero escalar um formador para uma formação e alterar sua
@@ -450,7 +448,7 @@ situação entre prevista, realizada e cancelada, para manter o cronograma atual
 
 ## US011 — Consultar cobertura da apostila
 
-**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF011 · **Situação:** em andamento
+**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF011 · **Situação:** concluída; mesclada na `main` (PR #10)
 
 ### O que faz
 Como coordenador ou formador, quero ver quais temas obrigatórios ainda não têm data
@@ -488,14 +486,14 @@ separados em três listas: não alocados, agendados e realizados.
 | T011.1 Criar consulta dos temas da apostila e das formações do ciclo (repositório) | Feita | `cronograma/repositories.py` |
 | T011.2 Criar serviço que classifica cada tema em não alocado / agendado / realizado, sempre calculado (RN005) | Feita | `cronograma/services.py` |
 | T011.3 Criar tela de cobertura com seleção de ciclo e destaque para os não alocados | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/cobertura.html`, `acesso/templates/acesso/home.html` |
-| T011.4 Testes: cancelada volta a não alocado, opcionais ficam fora, soma = total de temas (CA004) | Feita (<<n>> testes) | `cronograma/tests/test_cobertura.py` |
+| T011.4 Testes: cancelada volta a não alocado, opcionais ficam fora, soma = total de temas (CA004) | Feita (9 testes) | `cronograma/tests/test_cobertura.py` |
 
 ### Mudanças em relação ao plano
 - Decisão nossa, não especificada: com várias formações do mesmo tema no ciclo, vale a
   mais avançada (realizada > prevista).
-- A situação da formação só muda para `realizada` pelo admin por enquanto: nenhuma
-  tela altera a situação. Sem isso, a lista "realizados" só se preenche por esse
-  caminho.
+- Quando a US011 foi entregue, a situação da formação só mudava pelo admin. Desde a
+  US007, ela é alterada pela tela do cronograma, e a lista "realizados" se preenche
+  por esse caminho.
 - Ao incluir o link da cobertura, o link "Cronograma" da home foi removido por engano e
   quebrou `test_menu_completo_para_coordenador` (US001); foi restaurado.
 
@@ -506,7 +504,7 @@ separados em três listas: não alocados, agendados e realizados.
 
 ## US012 — Consultar histórico de temas por formador
 
-**RF:** RF012 · **Situação:** em desenvolvimento (branch `us012-historico-temas-formador`)
+**Responsável:** Bruno · **Sprint:** 2 · **RF:** RF012 · **Situação:** concluída; mesclada na `main` (PR #13)
 
 ### O que faz
 Como coordenador ou formador, quero consultar os temas que um formador já ministrou
@@ -544,7 +542,7 @@ buscar um tema mostra os formadores que o ministraram.
 
 ## US014 — Lançar presença em lote
 
-**Responsável:** Cauã · **Sprint:** 2 · **RF:** RF014 · **Situação:** em desenvolvimento (branch `us014-presenca-em-lote`)
+**Responsável:** Cauã · **Sprint:** 3 (transferida da Sprint 2) · **RF:** RF014 · **Situação:** concluída; mesclada na `main` (PR #14)
 
 ### O que faz
 Como coordenador, quero marcar a presença de toda a turma de um encontro em uma única
@@ -609,7 +607,7 @@ permitindo corrigir. A gravação é atômica: se uma linha falhar, nenhuma é s
 
 ## US016 — Exportar o cronograma do mês
 
-**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF016 · **Situação:** em andamento
+**Responsável:** Murilo · **Sprint:** 2 · **RF:** RF016 · **Situação:** concluída; mesclada na `main` (PR #11)
 
 ### O que faz
 Como coordenador, quero ver o cronograma do mês já formatado como texto, com botão de
@@ -646,13 +644,13 @@ canceladas não aparecem no texto exportado.
 | T016.1 Criar o formatador de texto do cronograma (padrão Template Method) | Feita | `cronograma/exportacao.py` |
 | T016.2 Criar serviço que busca as formações do mês, sem as canceladas | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
 | T016.3 Criar tela com seletor de mês e botão de copiar | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/exportar.html`, `acesso/templates/acesso/home.html` |
-| T016.4 Testes do texto gerado (uma linha por formação, canceladas fora) | Feita (<<n>> testes) | `cronograma/tests/test_exportacao.py` |
+| T016.4 Testes do texto gerado (uma linha por formação, canceladas fora) | Feita (12 testes) | `cronograma/tests/test_exportacao.py` |
 
 ### Mudanças em relação ao plano
 - Decisões nossas, não especificadas: o formato `dd/mm - tema - formador`, os textos
   "Sem tema" e "a definir", e o mês de hoje como padrão.
-- A mudança da situação de uma formação para `cancelada` só é possível pelo admin por
-  enquanto; nenhuma tela altera a situação.
+- Quando a US016 foi entregue, a situação `cancelada` só era definida pelo admin.
+  Desde a US007, ela é alterada pela tela do cronograma.
 - O botão "Copiar" só funciona em `localhost` ou HTTPS, por exigência do
   `navigator.clipboard`.
 
@@ -662,7 +660,7 @@ canceladas não aparecem no texto exportado.
 
 ## US013 — Consultar carga de formações por formador
 
-**Responsável:** Murilo · **Sprint:** 3 · **RF:** RF013 · **Situação:** finalizada
+**Responsável:** Murilo · **Sprint:** 3 · **RF:** RF013 · **Situação:** concluída; mesclada na `main` (PR #15)
 
 ### O que faz
 Como coordenador, quero ver quantas formações cada formador já ministrou no ciclo,
@@ -693,45 +691,16 @@ formador já ministrou nele.
 |---|---|---|
 | T013.1 Criar consulta agregada (COUNT) de formações por formador no ciclo, nunca armazenada (RN006) | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
 | T013.2 Criar tela de carga por formador com seleção de ciclo | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/carga.html`, `acesso/templates/acesso/home.html` |
-| T013.3 Testes da contagem | Feita (<<n>> testes) | `cronograma/tests/test_carga.py` |
+| T013.3 Testes da contagem | Feita (9 testes) | `cronograma/tests/test_carga.py` |
 
 ### Mudanças em relação ao plano
--
+- Nenhuma.
+
 ---
 
-<<<<<<< HEAD
-## US017 — Registrar encontro sem tema da apostila
-
-**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF017 · **Situação:** em andamento (branch `us017-encontro-sem-tema`)
-
-### O que faz
-Como coordenador, quero registrar encontros que não têm tema obrigatório (oração,
-dinâmica), para que esses encontros também apareçam no cronograma e recebam
-lançamento de presença.
-
-Critérios de aceitação:
-- Cadastrar uma formação sem tema da apostila (ou com tema opcional) faz ela aparecer
-  no cronograma e permite lançar presença nela.
-- Esse encontro não aparece na consulta de cobertura da apostila.
-
-### Como foi feita
-- **A maior parte já estava pronta nas histórias anteriores.** `Formacao.tema` aceita
-  ficar vazio e o formulário oferece "Sem tema" e "Temas opcionais" (US006). A cobertura
-  só considera temas `tipo=apostila` (US011). A presença não depende do tema (US014).
-  A US017 confirma isso com testes, sem model novo e sem migração.
-- **Lacuna encontrada:** um encontro sem tema aparecia como "Sem tema" no cronograma, na
-  presença, na escalação e no texto exportado, mesmo com a descrição preenchida. Com
-  isso, não dava para diferenciar uma oração de uma dinâmica.
-- Para resolver, `Formacao` ganhou a propriedade `titulo`: o nome do tema, senão a
-  descrição, senão "Sem tema". É calculada e não armazenada (RN006). Fica no modelo
-  para que as telas e a exportação usem a mesma regra, em vez de repetir o
-  `default:"Sem tema"` em cada template. O `__str__` também passou a usá-la.
-- O campo "Descrição" do formulário de formação ganhou um texto de ajuda sugerindo
-  usá-lo para encontros sem tema (ex.: Oração, Dinâmica).
-=======
 ## US008 — Receber avisos ao escalar um formador
 
-**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF008 · **Situação:** em andamento (branch `us008-receber-avisos-ao-escalar-um-formador`)
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF008 · **Situação:** concluída; mesclada na `main` (PR #16)
 
 ### O que faz
 Como coordenador, quero ser avisado quando o formador escolhido já ministrou aquele
@@ -762,26 +731,10 @@ Critérios de aceitação:
   (`dados_para_escalacao` passou a trazer `avisos`), com o botão "Escalar formador"
   disponível, e depois de gravar, como mensagem do tipo `warning` no cronograma. O
   `base.html` ganhou a classe `aviso` para essas mensagens.
->>>>>>> 3dedf0b2933573c2c7fc0cb37e76fcdeef3d5352
 
 ### Tarefas
 | Tarefa | Situação | Onde |
 |---|---|---|
-
-| T017.1 Permitir tema em branco ou opcional no formulário de formação | Feita (já existia desde a US006; agora o encontro é identificado pela descrição) | `cronograma/models.py` (`titulo`), `cronograma/forms.py`, `cronograma/templates/cronograma/cronograma.html`, `cronograma/templates/cronograma/escalar_formador.html`, `cronograma/exportacao.py` |
-| T017.2 Garantir que esses encontros aceitem presença e fiquem fora da cobertura | Feita (sem mudança de regra; coberto por testes) | `presenca/templates/presenca/lancar_presenca.html` |
-| T017.3 Testes: encontro sem tema aparece no cronograma e não entra na cobertura | Feita (13 testes) | `cronograma/tests/test_encontro_sem_tema.py` (11), `presenca/tests/test_presenca.py` (2) |
-
-### Mudanças em relação ao plano
-- Não havia regra nova a implementar: os critérios já eram atendidos pela US006, US011
-  e US014. O trabalho foi provar isso com testes e mostrar a descrição no lugar do tema.
-- A exportação do cronograma (US016) passou a mostrar a descrição dos encontros sem
-  tema (`10/03 - Oração - a definir`). Sem descrição, continua "Sem tema".
-
-### Validação
-- Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
-  encontrou mudanças pendentes e a suíte completa (234 testes) passou.
-
 | T008.1 Criar a interface de regra de aviso (padrão Strategy), cada aviso com código próprio | Feita | `cronograma/avisos.py` |
 | T008.2 Implementar a regra "formador já ministrou este tema" (informando a data) | Feita | `cronograma/avisos.py` |
 | T008.3 Serviço devolve a formação gravada + lista de avisos, sem exceção (RN001) | Feita | `cronograma/services.py` |
@@ -797,14 +750,103 @@ Critérios de aceitação:
 ### Validação
 - Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
   encontrou mudanças pendentes e a suíte completa (235 testes) passou.
-
 - Sem migração nova.
+
+---
+
+## US017 — Registrar encontro sem tema da apostila
+
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF017 · **Situação:** concluída; mesclada na `main` (PR #17)
+
+### O que faz
+Como coordenador, quero registrar encontros que não têm tema obrigatório (oração,
+dinâmica), para que esses encontros também apareçam no cronograma e recebam
+lançamento de presença.
+
+Critérios de aceitação:
+- Cadastrar uma formação sem tema da apostila (ou com tema opcional) faz ela aparecer
+  no cronograma e permite lançar presença nela.
+- Esse encontro não aparece na consulta de cobertura da apostila.
+
+### Como foi feita
+- **A maior parte já estava pronta nas histórias anteriores.** `Formacao.tema` aceita
+  ficar vazio e o formulário oferece "Sem tema" e "Temas opcionais" (US006). A cobertura
+  só considera temas `tipo=apostila` (US011). A presença não depende do tema (US014).
+  A US017 confirma isso com testes, sem model novo e sem migração.
+- **Lacuna encontrada:** um encontro sem tema aparecia como "Sem tema" no cronograma, na
+  presença, na escalação e no texto exportado, mesmo com a descrição preenchida. Com
+  isso, não dava para diferenciar uma oração de uma dinâmica.
+- Para resolver, `Formacao` ganhou a propriedade `titulo`: o nome do tema, senão a
+  descrição, senão "Sem tema". É calculada e não armazenada (RN006). Fica no modelo
+  para que as telas e a exportação usem a mesma regra, em vez de repetir o
+  `default:"Sem tema"` em cada template. O `__str__` também passou a usá-la.
+- O campo "Descrição" do formulário de formação ganhou um texto de ajuda sugerindo
+  usá-lo para encontros sem tema (ex.: Oração, Dinâmica).
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T017.1 Permitir tema em branco ou opcional no formulário de formação | Feita (já existia desde a US006; agora o encontro é identificado pela descrição) | `cronograma/models.py` (`titulo`), `cronograma/forms.py`, `cronograma/templates/cronograma/cronograma.html`, `cronograma/templates/cronograma/escalar_formador.html`, `cronograma/exportacao.py` |
+| T017.2 Garantir que esses encontros aceitem presença e fiquem fora da cobertura | Feita (sem mudança de regra; coberto por testes) | `presenca/templates/presenca/lancar_presenca.html` |
+| T017.3 Testes: encontro sem tema aparece no cronograma e não entra na cobertura | Feita (13 testes) | `cronograma/tests/test_encontro_sem_tema.py` (11), `presenca/tests/test_presenca.py` (2) |
+
+### Mudanças em relação ao plano
+- Não havia regra nova a implementar: os critérios já eram atendidos pela US006, US011
+  e US014. O trabalho foi provar isso com testes e mostrar a descrição no lugar do tema.
+- A exportação do cronograma (US016) passou a mostrar a descrição dos encontros sem
+  tema (`10/03 - Oração - a definir`). Sem descrição, continua "Sem tema".
+
+### Validação
+- Em 21/11/2026, `manage.py check` não acusou problemas, `makemigrations --check` não
+  encontrou mudanças pendentes e a suíte completa (234 testes) passou.
+
+---
+
+
+## US015 — Consultar frequência do perseverante
+
+**Responsável:** Murilo · **Sprint:** 3 · **RF:** RF015 · **Situação:** concluída; mesclada na `main` (PR #18)
+
+### O que faz
+Como coordenador, quero ver a frequência de cada perseverante no ciclo, para
+acompanhar a participação da turma.
+
+Critérios de aceitação: selecionado um ciclo, a tela mostra, para cada perseverante,
+quantos encontros ele esteve presente, ausente e justificado; a consulta é restrita
+ao perfil coordenador.
+
+### Como foi feita
+- Não há model novo nem migração: a frequência é sempre calculada a partir das
+  presenças lançadas (RN006).
+- A consulta agregada (`presenca/repositories.contar_presencas_por_situacao`) filtra as
+  presenças do perseverante nas formações do ciclo (data entre início e fim, RN002),
+  exclui as formações `canceladas`, agrupa por situação com `COUNT` e devolve
+  `{presente, ausente, justificado}`, com zero para a situação sem registro.
+- O serviço (`frequencia_do_perseverante`) não recebe `request` e só chama o
+  repositório.
+- A tela (`/frequencia/`) tem seletor de ciclo e mostra uma tabela com todos
+  os perseverantes do ciclo e as três contagens.
+- A tela é só do coordenador (`@coordenador_required`): formador recebe 403 e anônimo
+  vai ao login. Isso cumpre a parte "frequência" da T018.2. O link "Frequência" fica
+  no menu do coordenador.
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T015.1 Criar consulta de frequência agrupada por presente, ausente e justificado | Feita | `presenca/repositories.py`, `presenca/services.py` |
+| T015.2 Criar tela de frequência restrita ao coordenador | Feita | `presenca/views.py`, `presenca/urls.py`, `presenca/templates/presenca/frequencia.html`, `acesso/templates/acesso/home.html` |
+| T015.3 Testes: contagens e acesso negado ao perfil formador | Feita (7 testes) | `presenca/tests/test_frequencia.py` |
+
+### Mudanças em relação ao plano
+- A tela lista a frequência de todos os perseverantes do ciclo de uma vez, em vez de
+  pedir que um perseverante seja selecionado antes.
+- Decisão nossa, não especificada: formações canceladas não entram na contagem.
 
 ---
 
 ## US018 — Consultar o cronograma como formador
 
-**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF018 · **Situação:** em andamento (branch `us018-cronograma-do-formador`)
+**Responsável:** Cauã · **Sprint:** 3 · **RF:** RF018 · **Situação:** concluída; mesclada na `main` (PR #19)
 
 ### O que faz
 Como formador, quero consultar o cronograma do ciclo e ver as datas em que estou
@@ -852,10 +894,10 @@ que ele está escalado, sem opção de editar nada.
 ### Mudanças em relação ao plano
 - **Mudança de esquema não prevista na Etapa 3:** o vínculo `Formador.usuario` foi
   necessário para saber quem é o formador logado. Ele altera o cadastro de formadores
-  da US003. A decisão precisa ser registrada com a equipe.
-- A tela de frequência (US015) ainda não existe na `main`. Quando entrar, ela deve usar
-  `@coordenador_required` para cumprir a parte "frequência" da T018.2, e o teste
-  `PermissaoDoFormadorTests` deve ganhar a URL dela.
+  da US003. A decisão foi registrada na documentação da Etapa 3 (seções 2.2 e 4.1).
+- A tela de frequência (US015) entrou depois desta história e usa
+  `@coordenador_required`, o que cumpre a parte "frequência" da T018.2. O acesso negado
+  ao formador é testado em `presenca/tests/test_frequencia.py`.
 - O formador ainda não vê o próprio cronograma na exportação em texto (US016), que
   continua só do coordenador.
 
@@ -867,9 +909,58 @@ que ele está escalado, sem opção de editar nada.
 
 ---
 
+## US009 — Registrar troca de formador
+
+**Responsável:** Murilo · **Sprint:** 3 · **RF:** RF009 · **Situação:** concluída; mesclada na `main` (PR #20)
+
+### O que faz
+Como coordenador, quero que o sistema registre automaticamente quando troco o formador
+de uma formação, para manter o histórico de quem estava escalado antes.
+
+Critérios de aceitação: alterar o formador de uma formação já cadastrada gera um
+registro com formador anterior, novo formador e data; uma segunda troca na mesma
+formação gera um segundo registro, sem apagar o primeiro; cancelar uma formação não é
+tratado como troca.
+
+### Como foi feita
+- Novo model `TrocaFormador` (herda de `RegistroBase`, RN008) com formação, formador
+  anterior, formador novo e data da troca. As FKs usam `PROTECT`: o histórico não some
+  se alguém tentar apagar a formação ou um dos formadores.
+- **RN007: a troca é gravada antes de atualizar o formador.** O repositório
+  (`trocar_formador_da_formacao`) cria o registro de troca e só depois altera
+  `Formacao.formador`, tudo dentro de um único `transaction.atomic()`: ou as duas
+  gravações acontecem, ou nenhuma.
+- O serviço (`trocar_formador`) recusa formação sem formador (essa é a escalação da
+  US007), formador inválido ou inativo e troca pelo mesmo formador. Depois da troca, ele
+  devolve os avisos da US008 para o novo formador, sem bloquear a operação (RN001).
+- Cancelar uma formação é mudança de situação (US007), não de formador, por isso não
+  gera registro.
+- A tela (`/cronograma/<id>/trocar/`) é só do coordenador, mostra o histórico de trocas
+  da formação e volta ao cronograma depois de gravar.
+- `numero_de_trocas_do_ciclo` conta as trocas das formações do ciclo e é reutilizada
+  pelo relatório de fechamento (US019).
+
+### Tarefas
+| Tarefa | Situação | Onde |
+|---|---|---|
+| T009.1 Criar model TrocaFormador (formação, formador anterior, novo formador, data) + migration | Feita | `cronograma/models.py`, `cronograma/migrations/0002_trocaformador.py` |
+| T009.2 Registrar a troca antes de atualizar o formador da formação (RN007) | Feita | `cronograma/repositories.py`, `cronograma/services.py` |
+| T009.3 Exibir o histórico de trocas da formação | Feita | `cronograma/views.py`, `cronograma/urls.py`, `cronograma/templates/cronograma/trocar_formador.html` |
+| T009.4 Testes: múltiplas trocas e cancelamento não é troca | Feita (10 testes) | `cronograma/tests/test_troca.py` |
+
+### Mudanças em relação ao plano
+- Decisões nossas, não especificadas: trocar pelo mesmo formador é recusado, e a troca
+  também exibe os avisos da US008 para o novo formador.
+
+### Validação
+- **Migração nova:** `cronograma/0002_trocaformador`. Quem baixar a `main` precisa rodar
+  `python manage.py migrate`.
+
+---
+
 ## US019 — Gerar relatório de fechamento do ciclo
 
-**RF:** RF019 · **Situação:** implementada na branch `us019-relatorio-fechamento-ciclo`
+**Responsável:** Bruno · **Sprint:** 3 · **RF:** RF019 · **Situação:** concluída; mesclada na `main` (PR #21)
 
 ### O que faz
 Como coordenador, quero consultar o fechamento consolidado de um ciclo encerrado e
@@ -892,10 +983,8 @@ exportá-lo em Excel ou PDF.
 - A frequência reutiliza a contagem existente de presente, ausente e justificado por
   perseverante, excluindo formações canceladas. O relatório apresenta as linhas por
   pessoa e os totais da turma; sem lançamentos, as contagens permanecem zero.
-- A investigação localizou a implementação e testes da troca de formador associada à
-  US009, mas não há seção US009 neste histórico. Também encontrou a tela, serviço e
-  testes de frequência da US015, apesar da nota anterior da US018 dizer que ela ainda
-  não existia. A US019 reutiliza essas implementações, sem criar regras paralelas.
+- A contagem de trocas reutiliza a US009 e a frequência reutiliza a US015, sem criar
+  regras paralelas.
 - A planilha usa `openpyxl` e o PDF usa `reportlab`. O PDF usa tabelas multipágina com
   cabeçalhos repetidos e rodapé com ciclo e número da página. Não há migração.
 
@@ -906,7 +995,7 @@ exportá-lo em Excel ou PDF.
 | T019.2 Tela do relatório para coordenador | Feita | `relatorios/forms.py`, `relatorios/views.py`, `relatorios/urls.py`, `relatorios/templates/relatorios/fechamento.html`, `acesso/templates/acesso/home.html`, `config/urls.py` |
 | T019.3 Exportação em planilha Excel | Feita | `relatorios/exportacao.py`, `relatorios/views.py`, `relatorios/urls.py`, `requirements.txt` |
 | T019.4 Exportação em PDF | Feita | `relatorios/exportacao.py`, `relatorios/views.py`, `relatorios/urls.py`, `requirements.txt` |
-| T019.5 Testes e documentação | Feita | `relatorios/tests/test_relatorio.py`, `HISTORIAS.md` |
+| T019.5 Testes e documentação | Feita (14 testes) | `relatorios/tests/test_relatorio.py`, `HISTORIAS.md` |
 
 ### Mudanças em relação ao plano
 - Nenhuma regra de negócio foi acrescentada aos cinco blocos. Temas, carga e
